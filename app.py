@@ -215,16 +215,47 @@ def search_cities(query: str, language: str, country_code: str | None = None) ->
     return results
 
 
-def city_label(city: dict[str, Any]) -> str:
-    country = city.get("country", "")
-    country_code = city.get("country_code", "")
-    if country_code:
-        country = f"{country} ({country_code})" if country else country_code
+def _place_key(value: str) -> str:
+    """Normalize a place label for comparison without changing what users see."""
+    normalized = unicodedata.normalize("NFKC", value).strip().casefold()
+    normalized = normalized.replace("臺", "台").replace("湾", "灣")
+    return re.sub(r"[\s,，._\-()（）]+", "", normalized)
+
+
+def city_label(city: dict[str, Any], language: str) -> str:
+    """Build a user-facing label while keeping raw geocoder data unchanged."""
+    country_code = str(city.get("country_code", "")).upper()
+    country = str(city.get("country", ""))
+    admin1 = str(city.get("admin1", ""))
+
+    # GeoNames/Open-Meteo may localize Taiwan as variants such as
+    # "台灣省", "臺灣省", "台湾省", or "Taiwan Province". For TW
+    # results, show the neutral short label requested by this app.
+    if country_code == "TW":
+        country = "台灣" if language == "zh-TW" else "Taiwan"
+        province_labels = {
+            "台灣",
+            "台灣省",
+            "taiwan",
+            "taiwanprovince",
+            "provinceoftaiwan",
+            "taiwanprovinceofchina",
+            "taiwanprovincechina",
+        }
+        if _place_key(admin1) in province_labels:
+            admin1 = ""
+
+    country_with_code = country
+    if country_code and country_code != "TW":
+        country_with_code = f"{country} ({country_code})" if country else country_code
 
     parts: list[str] = []
-    for part in (city.get("name", ""), city.get("admin1", ""), country):
-        if part and part not in parts:
+    seen: set[str] = set()
+    for part in (str(city.get("name", "")), admin1, country_with_code):
+        key = _place_key(part)
+        if part and key not in seen:
             parts.append(part)
+            seen.add(key)
 
     place = ", ".join(parts)
     return f"{place} — {city['latitude']:.4f}, {city['longitude']:.4f} — {city['timezone']}"
@@ -370,7 +401,7 @@ if results:
     index = st.selectbox(
         t["select_city"],
         options=range(len(results)),
-        format_func=lambda i: city_label(results[i]),
+        format_func=lambda i: city_label(results[i], language),
         key="selected_city_index",
     )
     selected_city = results[index]

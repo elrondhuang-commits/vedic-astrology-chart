@@ -6,6 +6,8 @@ A simple, database-free Vedic natal chart website designed for direct deployment
 
 - Python + Streamlit only
 - Global city search through the free Open-Meteo Geocoding API
+- Separate hour/minute controls plus optional manual `HH:MM` time entry
+- Automatic English-name conversion for common Traditional Chinese Taiwan city searches
 - City name, country, administrative area, latitude, longitude, and IANA timezone
 - Historical timezone conversion with `zoneinfo` and `tzdata`
 - Explicit detection of ambiguous and nonexistent local times
@@ -29,7 +31,7 @@ A simple, database-free Vedic natal chart website designed for direct deployment
 
 ## Run locally
 
-Python 3.11 or 3.12 is recommended.
+Python 3.11 is recommended, especially for Streamlit Community Cloud with the pinned `pyswisseph` version.
 
 ```bash
 python -m venv .venv
