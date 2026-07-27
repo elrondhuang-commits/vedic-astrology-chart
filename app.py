@@ -866,23 +866,34 @@ if chart:
         display_mahadashas = [
             period for period in dasha["mahadashas"] if period.get("within_display_window")
         ]
-        st.subheader(t["timeline"])
-        for period in display_mahadashas:
-            label = body_label(period["lord"], language)
-            marker = period_status(period, language)
-            heading = f"**{label}** · {format_year_value(float(period['duration_years']), True, language)}"
-            if marker:
-                heading += f" · **{marker}**"
-            st.markdown(heading)
-            st.caption(
-                f"{format_local_datetime(period['start_utc'], context_timezone)} → "
-                f"{format_local_datetime(period['end_utc'], context_timezone)}"
+        current_mahadasha = next(
+            (period for period in display_mahadashas if period.get("current")),
+            None,
+        )
+        if current_mahadasha:
+            st.subheader(t["timeline"])
+            current_label = body_label(current_mahadasha["lord"], language)
+            current_marker = period_status(current_mahadasha, language)
+            current_heading = (
+                f"**{current_label}** · "
+                f"{format_year_value(float(current_mahadasha['duration_years']), True, language)}"
             )
-            if period.get("current"):
-                progress = period_progress(period["start_utc"], period["end_utc"], dasha["current_utc"])
-                st.progress(progress, text=f"{t['progress']}：{progress * 100:.1f}%")
-            else:
-                st.divider()
+            if current_marker:
+                current_heading += f" · **{current_marker}**"
+            st.markdown(current_heading)
+            st.caption(
+                f"{format_local_datetime(current_mahadasha['start_utc'], context_timezone)} → "
+                f"{format_local_datetime(current_mahadasha['end_utc'], context_timezone)}"
+            )
+            current_md_progress = period_progress(
+                current_mahadasha["start_utc"],
+                current_mahadasha["end_utc"],
+                dasha["current_utc"],
+            )
+            st.progress(
+                current_md_progress,
+                text=f"{t['progress']}：{current_md_progress * 100:.1f}%",
+            )
 
         st.subheader(t["mahadasha_table"])
         mahadasha_rows = [
