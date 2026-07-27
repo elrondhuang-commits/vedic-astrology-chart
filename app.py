@@ -304,8 +304,56 @@ st.set_page_config(page_title="吠陀占星 | Vedic Astrology", page_icon="✨",
 st.markdown(
     """
     <style>
-      .block-container {max-width: 1120px; padding-top: 1.6rem; padding-bottom: 3rem;}
+      /* Main layout */
+      .block-container {
+        max-width: 1120px;
+        padding-top: 1.6rem;
+        padding-bottom: 3rem;
+      }
+
+      /* Hide Streamlit's automatic heading-anchor icon. */
+      [data-testid="stHeaderActionElements"],
+      [data-testid="stHeadingWithActionElements"] a,
+      h1 > a, h2 > a, h3 > a, h4 > a, h5 > a, h6 > a,
+      a.anchor-link {
+        display: none !important;
+      }
+
+      /* Keep section titles visually consistent. */
+      [data-testid="stHeadingWithActionElements"] h1,
+      [data-testid="stHeadingWithActionElements"] h2,
+      [data-testid="stHeadingWithActionElements"] h3 {
+        letter-spacing: -0.015em;
+        line-height: 1.3;
+      }
+      [data-testid="stHeadingWithActionElements"] h2,
+      [data-testid="stHeadingWithActionElements"] h3 {
+        margin-top: 0.35rem;
+        margin-bottom: 0.65rem;
+      }
+
+      /* Metrics and tables */
       [data-testid="stMetricValue"] {font-size: 1.35rem;}
+      [data-testid="stDataFrame"] {margin-top: 0.35rem; margin-bottom: 1rem;}
+
+      /* Tabs remain usable on narrow screens instead of squeezing labels. */
+      [data-baseweb="tab-list"] {
+        gap: 0.35rem;
+        overflow-x: auto;
+        scrollbar-width: thin;
+      }
+      [data-baseweb="tab"] {white-space: nowrap;}
+
+      @media (max-width: 700px) {
+        .block-container {
+          padding-left: 0.85rem;
+          padding-right: 0.85rem;
+          padding-top: 1rem;
+        }
+        [data-testid="stMetricValue"] {font-size: 1.15rem;}
+        [data-testid="stHeadingWithActionElements"] h2 {font-size: 1.45rem;}
+        [data-testid="stHeadingWithActionElements"] h3 {font-size: 1.2rem;}
+      }
     </style>
     """,
     unsafe_allow_html=True,
@@ -563,7 +611,7 @@ def render_chart_svg(chart: Mapping[str, Any], language: str) -> None:
     </style>
     <div class="chart-card">{svg}</div>
     """
-    components.html(html, height=700, scrolling=False)
+    components.html(html, height=680, scrolling=False)
 
 
 language = st.sidebar.selectbox("Language / 語言", ["zh-TW", "en"], index=0)
@@ -576,7 +624,7 @@ with st.sidebar:
     st.markdown(f"### {t['settings']}")
     st.write("Sidereal · Lahiri")
     st.write("True Node · Whole Sign")
-    st.write("D1 · D9 · D10")
+    st.write("D1 · Moon · D2 · D3 · D9 · D10")
     st.write("Vimshottari")
     st.caption(t["license"])
 
@@ -792,6 +840,15 @@ if chart:
             chart_rows(moon_chart, language, include_nakshatra=True),
             use_container_width=True,
             hide_index=True,
+            column_config={
+                t["body"]: st.column_config.TextColumn(width="small"),
+                t["sign"]: st.column_config.TextColumn(width="small"),
+                t["degree"]: st.column_config.TextColumn(width="medium"),
+                t["nakshatra"]: st.column_config.TextColumn(width="medium"),
+                t["pada"]: st.column_config.NumberColumn(width="small"),
+                t["house"]: st.column_config.NumberColumn(width="small"),
+                t["motion"]: st.column_config.TextColumn(width="small"),
+            },
         )
 
     with tab_vargas:
@@ -823,6 +880,13 @@ if chart:
             chart_rows(varga_chart, language, include_nakshatra=False),
             use_container_width=True,
             hide_index=True,
+            column_config={
+                t["body"]: st.column_config.TextColumn(width="small"),
+                t["sign"]: st.column_config.TextColumn(width="small"),
+                t["varga_degree"]: st.column_config.TextColumn(width="medium"),
+                t["house"]: st.column_config.NumberColumn(width="small"),
+                t["motion"]: st.column_config.TextColumn(width="small"),
+            },
         )
 
     with tab_dasha:
@@ -949,7 +1013,19 @@ if chart:
             }
             for period in display_mahadashas
         ]
-        st.dataframe(mahadasha_rows, use_container_width=True, hide_index=True)
+        st.dataframe(
+            mahadasha_rows,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                t["mahadasha"]: st.column_config.TextColumn(width="small"),
+                t["start"]: st.column_config.TextColumn(width="medium"),
+                t["end"]: st.column_config.TextColumn(width="medium"),
+                t["duration_years"]: st.column_config.TextColumn(width="small"),
+                t["duration_readable"]: st.column_config.TextColumn(width="small"),
+                t["status"]: st.column_config.TextColumn(width="small"),
+            },
+        )
 
         default_md_index = next(
             (index for index, period in enumerate(display_mahadashas) if period.get("current")),
@@ -984,7 +1060,20 @@ if chart:
             }
             for period in selected_md["antardashas"]
         ]
-        st.dataframe(antardasha_rows, use_container_width=True, hide_index=True)
+        st.dataframe(
+            antardasha_rows,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                t["mahadasha"]: st.column_config.TextColumn(width="small"),
+                t["antardasha"]: st.column_config.TextColumn(width="small"),
+                t["start"]: st.column_config.TextColumn(width="medium"),
+                t["end"]: st.column_config.TextColumn(width="medium"),
+                t["duration_years"]: st.column_config.TextColumn(width="small"),
+                t["duration_readable"]: st.column_config.TextColumn(width="small"),
+                t["status"]: st.column_config.TextColumn(width="small"),
+            },
+        )
 
     with tab_positions:
         st.subheader(t["positions"])
@@ -992,6 +1081,15 @@ if chart:
             chart_rows(chart["charts"]["D1"], language, include_nakshatra=True),
             use_container_width=True,
             hide_index=True,
+            column_config={
+                t["body"]: st.column_config.TextColumn(width="small"),
+                t["sign"]: st.column_config.TextColumn(width="small"),
+                t["degree"]: st.column_config.TextColumn(width="medium"),
+                t["nakshatra"]: st.column_config.TextColumn(width="medium"),
+                t["pada"]: st.column_config.NumberColumn(width="small"),
+                t["house"]: st.column_config.NumberColumn(width="small"),
+                t["motion"]: st.column_config.TextColumn(width="small"),
+            },
         )
         st.caption(f"UTC: {chart['utc_datetime']} · JD(UT): {chart['julian_day_ut']:.6f}")
 
