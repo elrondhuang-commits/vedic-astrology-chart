@@ -19,8 +19,14 @@ A simple, database-free Vedic astrology website designed for direct deployment t
 - Degree within sign, 27 Nakshatras, and 4 Padas
 - North Indian SVG charts with the first house fixed at the upper centre
 - D1 Rashi natal chart
+- Moon chart (Chandra Lagna)
+- D2 Hora divisional chart
+- D3 Drekkana divisional chart
+- D4 Chaturthamsha divisional chart
+- D7 Saptamsha divisional chart
 - D9 Navamsha divisional chart
 - D10 Dashamsha divisional chart
+- D12 Dwadashamsha divisional chart
 - Vimshottari Mahadasha and Antardasha timelines
 - Birth Mahadasha balance and current Maha/Antardasha marker
 - No database, no AI API, and no intentional storage of birth data
@@ -28,7 +34,7 @@ A simple, database-free Vedic astrology website designed for direct deployment t
 ## Files
 
 - `app.py` — Streamlit interface, localization, city search, and tables
-- `astrology.py` — timezone validation, D1/D9/D10 calculations, and Vimshottari dasha
+- `astrology.py` — timezone validation, D1, Moon chart, divisional-chart calculations, and Vimshottari dasha
 - `north_indian_chart.py` — reusable North Indian SVG rendering
 - `requirements.txt` — Python dependencies
 - `README.md` — setup and calculation documentation
@@ -80,7 +86,23 @@ Planetary positions are calculated in UT. The sidereal Ascendant comes from the 
 
 ## Divisional-chart rules
 
-The app currently implements the standard Parashari rules for D9 and D10:
+The app currently implements these standard Parashari mappings:
+
+### D2 Hora
+
+Each sign is divided into two 15° halves. Odd signs map the first half to Leo and the second half to Cancer; even signs reverse that order.
+
+### D3 Drekkana
+
+Each sign is divided into three 10° parts, mapped to the natal sign, fifth sign, and ninth sign.
+
+### D4 Chaturthamsha
+
+Each sign is divided into four 7°30′ parts, mapped to the natal sign, fourth sign, seventh sign, and tenth sign.
+
+### D7 Saptamsha
+
+Each sign is divided into seven equal parts. Odd signs begin from the natal sign; even signs begin from the seventh sign.
 
 ### D9 Navamsha
 
@@ -96,6 +118,10 @@ Every sign is divided into ten parts of 3°.
 
 - Odd-numbered signs begin from the same sign.
 - Even-numbered signs begin from the ninth sign.
+
+### D12 Dwadashamsha
+
+Each sign is divided into twelve 2°30′ parts, proceeding zodiacally from the natal sign.
 
 The divisional Ascendant and all body placements are mapped from their D1 sidereal longitudes. Houses in each divisional chart are Whole Sign houses counted from that divisional Ascendant.
 
@@ -148,3 +174,18 @@ Swiss Ephemeris is dual-licensed. This AGPL project is intended to follow the op
 - Mahadasha timeline
 - Full Mahadasha year lengths retained
 - Decimal Antardasha years plus readable approximate duration
+
+
+## v7.1 interface refinements
+
+- Removed Streamlit heading anchor icons.
+- Unified section-title spacing and typography.
+- Improved tab behavior and page padding on mobile screens.
+- Refined chart spacing and table column widths.
+
+## v8 divisional charts
+
+- Added D4 Chaturthamsha.
+- Added D7 Saptamsha.
+- Added D12 Dwadashamsha.
+- Expanded the divisional-chart selector and calculation notes.

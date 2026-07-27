@@ -72,8 +72,11 @@ VARGA_NAMES = {
     1: "Rashi",
     2: "Hora",
     3: "Drekkana",
+    4: "Chaturthamsha",
+    7: "Saptamsha",
     9: "Navamsha",
     10: "Dashamsha",
+    12: "Dwadashamsha",
 }
 
 # Vimshottari order begins with the ruler of Ashwini. The nine durations total 120 years.
@@ -229,9 +232,14 @@ def varga_longitude(longitude: float, division: int) -> float:
     - D2 Hora: odd signs map first half to Leo and second half to Cancer;
       even signs reverse the order.
     - D3 Drekkana: the three decans map to the natal sign, fifth, and ninth.
+    - D4 Chaturthamsha: the four quarters map to the natal sign, fourth,
+      seventh, and tenth signs.
+    - D7 Saptamsha: odd signs begin from themselves; even signs begin from
+      the seventh sign.
     - D9 Navamsha: movable signs begin from themselves, fixed signs from the ninth,
       and dual signs from the fifth.
     - D10 Dashamsha: odd signs begin from themselves and even signs from the ninth.
+    - D12 Dwadashamsha: the twelve parts proceed zodiacally from the natal sign.
 
     The returned longitude encodes both the resulting varga sign and the proportional
     degree within that sign.
@@ -259,6 +267,23 @@ def varga_longitude(longitude: float, division: int) -> float:
         within_part = degree_in_sign - part_index * part_size
         target_sign = (sign_index + part_index * 4) % 12
         target_degree = within_part * 3.0
+        return _normalize_longitude(target_sign * 30.0 + target_degree)
+
+    if division == 4:
+        part_size = 7.5
+        part_index = min(3, int(degree_in_sign // part_size))
+        within_part = degree_in_sign - part_index * part_size
+        target_sign = (sign_index + part_index * 3) % 12
+        target_degree = within_part * 4.0
+        return _normalize_longitude(target_sign * 30.0 + target_degree)
+
+    if division == 7:
+        part_size = 30.0 / 7.0
+        part_index = min(6, int(degree_in_sign // part_size))
+        within_part = degree_in_sign - part_index * part_size
+        start_sign = sign_index if sign_index % 2 == 0 else (sign_index + 6) % 12
+        target_sign = (start_sign + part_index) % 12
+        target_degree = within_part * 7.0
         return _normalize_longitude(target_sign * 30.0 + target_degree)
 
     if division == 9:
@@ -293,6 +318,14 @@ def varga_longitude(longitude: float, division: int) -> float:
 
         target_sign = (start_sign + part_index) % 12
         target_degree = within_part * 10.0
+        return _normalize_longitude(target_sign * 30.0 + target_degree)
+
+    if division == 12:
+        part_size = 2.5
+        part_index = min(11, int(degree_in_sign // part_size))
+        within_part = degree_in_sign - part_index * part_size
+        target_sign = (sign_index + part_index) % 12
+        target_degree = within_part * 12.0
         return _normalize_longitude(target_sign * 30.0 + target_degree)
 
     raise ValueError(f"Unsupported varga division: D{division}")
@@ -599,7 +632,7 @@ def calculate_chart(
     longitude: float,
     current_utc: datetime | None = None,
 ) -> dict[str, Any]:
-    """Calculate Lahiri D1, Moon, D2, D3, D9, D10, and Vimshottari data."""
+    """Calculate Lahiri D1, Moon, D2, D3, D4, D7, D9, D10, D12, and Vimshottari data."""
     if utc_dt.tzinfo is None:
         raise ValueError("utc_dt must be timezone-aware")
     if not -90.0 <= latitude <= 90.0:
@@ -613,8 +646,11 @@ def calculate_chart(
     moon_chart = calculate_moon_chart(d1["positions"])
     d2 = calculate_varga_chart(d1["positions"], 2)
     d3 = calculate_varga_chart(d1["positions"], 3)
+    d4 = calculate_varga_chart(d1["positions"], 4)
+    d7 = calculate_varga_chart(d1["positions"], 7)
     d9 = calculate_varga_chart(d1["positions"], 9)
     d10 = calculate_varga_chart(d1["positions"], 10)
+    d12 = calculate_varga_chart(d1["positions"], 12)
 
     moon = next((item for item in d1["positions"] if item["code"] == "Moon"), None)
     if moon is None:
@@ -637,8 +673,11 @@ def calculate_chart(
             "Moon": moon_chart,
             "D2": d2,
             "D3": d3,
+            "D4": d4,
+            "D7": d7,
             "D9": d9,
             "D10": d10,
+            "D12": d12,
         },
         "dasha": dasha,
         # Backward-compatible D1 aliases for older app versions or external callers.

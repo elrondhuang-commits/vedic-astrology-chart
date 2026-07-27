@@ -44,7 +44,7 @@ TEXT = {
     "zh-TW": {
         "page_title": "吠陀占星本命盤",
         "title": "吠陀占星本命盤",
-        "subtitle": "D1 本命盤、月亮盤、D2／D3／D9／D10 分盤與 Vimshottari 大運",
+        "subtitle": "D1 本命盤、月亮盤、D2／D3／D4／D7／D9／D10／D12 分盤與 Vimshottari 大運",
         "language": "語言",
         "birth_date": "出生日期",
         "birth_time": "出生時間",
@@ -86,8 +86,11 @@ TEXT = {
         "division_select": "選擇分盤",
         "d2_label": "D2 二分盤（Hora）",
         "d3_label": "D3 三分盤（Drekkana）",
+        "d4_label": "D4 四分盤（Chaturthamsha）",
+        "d7_label": "D7 七分盤（Saptamsha）",
         "d9_label": "D9 九分盤（Navamsha）",
         "d10_label": "D10 十分盤（Dashamsha）",
+        "d12_label": "D12 十二分盤（Dwadashamsha）",
         "d2_description": "D2 Hora 常用於財富、資源、累積方式與物質支持的輔助判讀。此版本採傳統 Parashari 太陽／月亮 Hora。",
         "d3_description": "D3 Drekkana 常用於手足、勇氣、行動力、努力方式與生命活力的輔助判讀。",
         "d9_description": "D9 是最常用的分盤之一，常用於婚姻、關係、法則與行星成熟度的輔助判讀。",
@@ -137,8 +140,8 @@ TEXT = {
         "local_birth_time": "出生地當地時間",
         "calculated_city": "出生地",
         "settings": "計算設定",
-        "settings_text": "恆星黃道 Lahiri ayanamsha；True Node；Whole Sign houses；月亮盤；Parashari D2/D3/D9/D10；Vimshottari 120 年週期。",
-        "varga_method_note": "月亮盤：以月亮星座作第一宮，D1 黃經不變。D2：奇數星座前半為太陽 Hora（獅子）、後半為月亮 Hora（巨蟹）；偶數星座相反。D3：每 10° 一段，依序落入本星座、第五與第九星座。D9：活動星座從本星座起、固定星座從第九星座起、雙體星座從第五星座起。D10：奇數星座從本星座起，偶數星座從第九星座起。",
+        "settings_text": "恆星黃道 Lahiri ayanamsha；True Node；Whole Sign houses；月亮盤；Parashari D2/D3/D4/D7/D9/D10/D12；Vimshottari 120 年週期。",
+        "varga_method_note": "月亮盤：以月亮星座作第一宮，D1 黃經不變。D2：奇數星座前半為太陽 Hora（獅子）、後半為月亮 Hora（巨蟹）；偶數星座相反。D3：每 10° 一段，依序落入本星座、第五與第九星座。D4：每 7°30′ 一段，依序落入本星座、第四、第七與第十星座。D7：奇數星座從本星座起，偶數星座從第七星座起。D9：活動星座從本星座起、固定星座從第九星座起、雙體星座從第五星座起。D10：奇數星座從本星座起，偶數星座從第九星座起。D12：每 2°30′ 一段，從本星座開始依黃道順序排列。",
         "dasha_method_note": "起始大運依出生月亮所在 Nakshatra 的守護星決定；出生時剩餘比例依月亮尚未走完的星宿比例計算。次運長度＝大運年數 × 次運守護星年數 ÷ 120。",
         "privacy": "隱私",
         "privacy_text": "本網站不使用資料庫，不會主動儲存你輸入的出生資料。Streamlit 與網路基礎設施仍可能產生一般技術日誌。",
@@ -153,7 +156,7 @@ TEXT = {
     "en": {
         "page_title": "Vedic Natal Chart",
         "title": "Vedic Natal Chart",
-        "subtitle": "D1 Rashi, Moon chart, D2/D3/D9/D10 vargas, and Vimshottari dasha",
+        "subtitle": "D1 Rashi, Moon chart, D2/D3/D4/D7/D9/D10/D12 vargas, and Vimshottari dasha",
         "language": "Language",
         "birth_date": "Birth date",
         "birth_time": "Birth time",
@@ -195,12 +198,18 @@ TEXT = {
         "division_select": "Select a divisional chart",
         "d2_label": "D2 Hora",
         "d3_label": "D3 Drekkana",
+        "d4_label": "D4 Chaturthamsha",
+        "d7_label": "D7 Saptamsha",
         "d9_label": "D9 Navamsha",
         "d10_label": "D10 Dashamsha",
+        "d12_label": "D12 Dwadashamsha",
         "d2_description": "D2 Hora is commonly consulted for wealth, resources, accumulation patterns, and material support. This version uses the classical Parashari Sun/Moon Hora.",
         "d3_description": "D3 Drekkana is commonly consulted for siblings, courage, initiative, effort, and vitality.",
+        "d4_description": "D4 Chaturthamsha is commonly consulted for residence, property, fixed assets, foundations, and inner stability.",
+        "d7_description": "D7 Saptamsha is commonly consulted for children, descendants, creativity, fertility, and continuity.",
         "d9_description": "D9 is one of the most frequently used divisional charts and is commonly consulted for marriage, relationships, dharma, and planetary maturity.",
         "d10_description": "D10 is commonly consulted for career, work roles, responsibility, and public expression.",
+        "d12_description": "D12 Dwadashamsha is commonly consulted for parents, ancestors, family background, inheritance, and inherited traits.",
         "varga_positions": "Divisional positions",
         "positions": "D1 planetary positions",
         "body": "Body",
@@ -246,8 +255,8 @@ TEXT = {
         "local_birth_time": "Local birth time",
         "calculated_city": "Birth place",
         "settings": "Calculation settings",
-        "settings_text": "Sidereal Lahiri ayanamsha; True Node; Whole Sign houses; Moon chart; Parashari D2/D3/D9/D10; 120-year Vimshottari cycle.",
-        "varga_method_note": "Moon chart: the Moon sign becomes house 1 while D1 longitudes remain unchanged. D2: in odd signs the first half is Sun Hora (Leo) and the second half Moon Hora (Cancer), reversed in even signs. D3: each 10-degree decan maps to the natal sign, fifth, and ninth. D9 and D10 use the stated Parashari mappings.",
+        "settings_text": "Sidereal Lahiri ayanamsha; True Node; Whole Sign houses; Moon chart; Parashari D2/D3/D4/D7/D9/D10/D12; 120-year Vimshottari cycle.",
+        "varga_method_note": "Moon chart: the Moon sign becomes house 1 while D1 longitudes remain unchanged. D2: in odd signs the first half is Sun Hora (Leo) and the second half Moon Hora (Cancer), reversed in even signs. D3: each 10-degree decan maps to the natal sign, fifth, and ninth. D4 maps four 7.5-degree quarters to the natal, fourth, seventh, and tenth signs. D7 begins from the natal sign for odd signs and the seventh for even signs. D9 and D10 use the stated Parashari mappings. D12 proceeds zodiacally from the natal sign in 2.5-degree parts.",
         "dasha_method_note": "The birth Moon's Nakshatra ruler starts the Mahadasha. The balance at birth follows the untraversed fraction of that Nakshatra. Antardasha length = Mahadasha years × Antardasha-lord years ÷ 120.",
         "privacy": "Privacy",
         "privacy_text": "This app uses no database and does not intentionally store birth data you enter. Streamlit and network infrastructure may still produce ordinary technical logs.",
@@ -624,7 +633,7 @@ with st.sidebar:
     st.markdown(f"### {t['settings']}")
     st.write("Sidereal · Lahiri")
     st.write("True Node · Whole Sign")
-    st.write("D1 · Moon · D2 · D3 · D9 · D10")
+    st.write("D1 · Moon · D2 · D3 · D4 · D7 · D9 · D10 · D12")
     st.write("Vimshottari")
     st.caption(t["license"])
 
@@ -791,7 +800,7 @@ if not selected_city:
 
 chart = st.session_state.get("chart")
 chart_context = st.session_state.get("chart_context", {})
-required_chart_codes = {"D1", "Moon", "D2", "D3", "D9", "D10"}
+required_chart_codes = {"D1", "Moon", "D2", "D3", "D4", "D7", "D9", "D10", "D12"}
 if chart and (
     "charts" not in chart
     or not required_chart_codes.issubset(set(chart.get("charts", {}).keys()))
@@ -855,18 +864,24 @@ if chart:
         varga_labels = {
             "D2": t["d2_label"],
             "D3": t["d3_label"],
+            "D4": t["d4_label"],
+            "D7": t["d7_label"],
             "D9": t["d9_label"],
             "D10": t["d10_label"],
+            "D12": t["d12_label"],
         }
         varga_descriptions = {
             "D2": t["d2_description"],
             "D3": t["d3_description"],
+            "D4": t["d4_description"],
+            "D7": t["d7_description"],
             "D9": t["d9_description"],
             "D10": t["d10_description"],
+            "D12": t["d12_description"],
         }
         division_code = st.selectbox(
             t["division_select"],
-            options=["D2", "D3", "D9", "D10"],
+            options=["D2", "D3", "D4", "D7", "D9", "D10", "D12"],
             format_func=lambda code: varga_labels[code],
             key="division_code",
         )
