@@ -104,6 +104,40 @@ VARGA_REGISTRY: dict[str, VargaInfo] = {
         },
         reference="Brihat Parashara Hora Shastra, divisional-chart rules",
     ),
+    "D16": VargaInfo(
+        code="D16",
+        division=16,
+        sanskrit_name="Shodashamsha",
+        labels={"zh-TW": "D16 十六分盤（Shodashamsha）", "en": "D16 Shodashamsha"},
+        descriptions={
+            "zh-TW": "D16 Shodashamsha 常用於交通工具、居住舒適、享受、內在安適與生活品質的輔助判讀。此分盤對出生時間較敏感。",
+            "en": "D16 Shodashamsha is commonly consulted for vehicles, comforts, enjoyment, inner ease, and quality of life. This chart is relatively sensitive to birth-time accuracy.",
+        },
+        reference="Brihat Parashara Hora Shastra, chapter on the sixteen divisions of a sign",
+    ),
+    "D20": VargaInfo(
+        code="D20",
+        division=20,
+        sanskrit_name="Vimshamsha",
+        labels={"zh-TW": "D20 二十分盤（Vimshamsha）", "en": "D20 Vimshamsha"},
+        descriptions={
+            "zh-TW": "D20 Vimshamsha 常用於靈性修持、宗教傾向、祈禱、奉獻與內在修行的輔助判讀。",
+            "en": "D20 Vimshamsha is commonly consulted for spiritual practice, religious inclination, prayer, devotion, and inner discipline.",
+        },
+        reference="Brihat Parashara Hora Shastra, chapter on the sixteen divisions of a sign",
+    ),
+    "D24": VargaInfo(
+        code="D24",
+        division=24,
+        sanskrit_name="Chaturvimshamsha",
+        labels={"zh-TW": "D24 二十四分盤（Chaturvimshamsha）", "en": "D24 Chaturvimshamsha"},
+        descriptions={
+            "zh-TW": "D24 Chaturvimshamsha 常用於教育、學習能力、知識累積、學術訓練與研習成果的輔助判讀。",
+            "en": "D24 Chaturvimshamsha is commonly consulted for education, learning capacity, accumulated knowledge, academic training, and study outcomes.",
+        },
+        reference="Brihat Parashara Hora Shastra, chapter on the sixteen divisions of a sign",
+    ),
+
 }
 
 SUPPORTED_VARGA_CODES: tuple[str, ...] = tuple(VARGA_REGISTRY)

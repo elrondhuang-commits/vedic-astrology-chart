@@ -1,4 +1,10 @@
-# Vedic Natal Chart — Streamlit
+# 吠陀星盤 — Streamlit
+
+**Version 0.3.0 — D16, D20, and D24**
+
+一個以透明、正確、可驗證及遵循古典 Jyotisha 為核心的開源吠陀占星平台。此版本在模組化核心與 Varga Registry 上新增 D16、D20、D24，並補上分界測試、版本紀錄與計算文件。
+
+> 現有 GitHub 專案升級時，請上傳所有檔案與 `core/`、`charts/`、`tests/`、`docs/` 四個資料夾，並維持其資料夾結構。
 
 A simple, database-free Vedic astrology website designed for direct deployment to Streamlit Community Cloud. The interface supports Traditional Chinese (`zh-TW`) and English (`en`).
 
@@ -27,6 +33,9 @@ A simple, database-free Vedic astrology website designed for direct deployment t
 - D9 Navamsha divisional chart
 - D10 Dashamsha divisional chart
 - D12 Dwadashamsha divisional chart
+- D16 Shodashamsha divisional chart
+- D20 Vimshamsha divisional chart
+- D24 Chaturvimshamsha divisional chart
 - Vimshottari Mahadasha and Antardasha timelines
 - Birth Mahadasha balance and current Maha/Antardasha marker
 - No database, no AI API, and no intentional storage of birth data
@@ -34,10 +43,13 @@ A simple, database-free Vedic astrology website designed for direct deployment t
 ## Files
 
 - `app.py` — Streamlit interface, localization, city search, and tables
-- `astrology.py` — timezone validation, D1, Moon chart, divisional-chart calculations, and Vimshottari dasha
-- `north_indian_chart.py` — reusable North Indian SVG rendering
+- `core/` — deterministic chart, varga, dasha, timezone, ephemeris, and metadata modules
+- `core/varga_registry.py` — stable varga codes plus bilingual names, descriptions, order, and references
+- `charts/` — reusable chart renderers
+- `tests/` — boundary and regression tests
+- `docs/` — architecture, algorithms, validation, and roadmap
+- `astrology.py` / `north_indian_chart.py` — backward-compatible import wrappers
 - `requirements.txt` — Python dependencies
-- `README.md` — setup and calculation documentation
 - `LICENSE` — GNU Affero General Public License v3.0
 
 ## Run locally
@@ -58,7 +70,7 @@ streamlit run app.py
 ## Deploy to Streamlit Community Cloud
 
 1. Create a GitHub repository.
-2. Upload all six project files to the repository root.
+2. Upload all root files plus the `core/`, `charts/`, `tests/`, and `docs/` folders while preserving their structure.
 3. Sign in to Streamlit Community Cloud.
 4. Create a new app and select the repository.
 5. Set the main file path to `app.py`.
@@ -122,6 +134,18 @@ Every sign is divided into ten parts of 3°.
 ### D12 Dwadashamsha
 
 Each sign is divided into twelve 2°30′ parts, proceeding zodiacally from the natal sign.
+
+### D16 Shodashamsha
+
+Each sign is divided into sixteen parts of 1°52′30″. Movable signs begin from Aries, fixed signs from Leo, and dual signs from Sagittarius. Subsequent parts advance zodiacally.
+
+### D20 Vimshamsha
+
+Each sign is divided into twenty parts of 1°30′. Movable signs begin from Aries, fixed signs from Sagittarius, and dual signs from Leo. Subsequent parts advance zodiacally.
+
+### D24 Chaturvimshamsha
+
+Each sign is divided into twenty-four parts of 1°15′. Under the mainstream Parashari/Santhanam convention used here, odd signs begin from Leo and even signs from Cancer; subsequent parts advance zodiacally. Some modern schools use a reversed sequence for even signs, so the convention is stated explicitly.
 
 The divisional Ascendant and all body placements are mapped from their D1 sidereal longitudes. Houses in each divisional chart are Whole Sign houses counted from that divisional Ascendant.
 
@@ -189,3 +213,11 @@ Swiss Ephemeris is dual-licensed. This AGPL project is intended to follow the op
 - Added D7 Saptamsha.
 - Added D12 Dwadashamsha.
 - Expanded the divisional-chart selector and calculation notes.
+
+## 0.3.0 changes
+
+- Added D16 Shodashamsha, D20 Vimshamsha, and D24 Chaturvimshamsha.
+- Extended the Varga Registry and Streamlit selector automatically through stable chart codes.
+- Added exact segment-boundary tests for 1°52′30″, 1°30′, and 1°15′ divisions.
+- Added `CHANGELOG.md` and updated architecture, algorithm, roadmap, and validation documents.
+- Kept the existing D1, Moon chart, Vimshottari, Taiwan city search, privacy behavior, and deployment requirements unchanged.

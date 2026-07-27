@@ -10,7 +10,7 @@ class CoreChartTests(unittest.TestCase):
         cls.result = calculate_chart(datetime(1990, 1, 1, 4, 0, tzinfo=timezone.utc), 22.9999, 120.2270, datetime(2026, 7, 27, tzinfo=timezone.utc))
 
     def test_expected_charts_exist(self):
-        self.assertEqual(set(self.result["charts"]), {"D1", "Moon", "D2", "D3", "D4", "D7", "D9", "D10", "D12"})
+        self.assertEqual(set(self.result["charts"]), {"D1", "Moon", "D2", "D3", "D4", "D7", "D9", "D10", "D12", "D16", "D20", "D24"})
 
     def test_rahu_ketu_opposition(self):
         positions = {p["code"]: p for p in self.result["charts"]["D1"]["positions"]}

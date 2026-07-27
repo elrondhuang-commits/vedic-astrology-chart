@@ -7,7 +7,7 @@ class VargaRegistryTests(unittest.TestCase):
     def test_expected_codes_are_registered(self):
         self.assertEqual(
             SUPPORTED_VARGA_CODES,
-            ("D2", "D3", "D4", "D7", "D9", "D10", "D12"),
+            ("D2", "D3", "D4", "D7", "D9", "D10", "D12", "D16", "D20", "D24"),
         )
 
     def test_every_entry_has_bilingual_ui_text(self):
