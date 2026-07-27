@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Any, Mapping
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -102,6 +102,13 @@ TEXT = {
         "balance_at_birth": "出生時剩餘",
         "balance_ends": "出生時大運結束",
         "current_period": "目前期間",
+        "current_summary": "目前大運與次運",
+        "remaining": "剩餘時間",
+        "elapsed": "已經過",
+        "progress": "期間進度",
+        "period_dates": "期間",
+        "timeline": "大運時間軸",
+        "duration_explanation": "大運年數是 Vimshottari 系統的固定完整期間；次運年數會依比例產生小數。",
         "current_as_of": "「目前」判定時間",
         "mahadasha_table": "大運表",
         "antardasha_table": "次運表",
@@ -110,7 +117,8 @@ TEXT = {
         "antardasha": "次運",
         "start": "開始",
         "end": "結束",
-        "duration_years": "年數",
+        "duration_years": "年數（年）",
+        "duration_readable": "約略期間",
         "status": "標記",
         "at_birth": "出生時",
         "current": "目前",
@@ -195,6 +203,13 @@ TEXT = {
         "balance_at_birth": "Balance at birth",
         "balance_ends": "Birth Mahadasha ends",
         "current_period": "Current period",
+        "current_summary": "Current Mahadasha and Antardasha",
+        "remaining": "Time remaining",
+        "elapsed": "Elapsed",
+        "progress": "Period progress",
+        "period_dates": "Period",
+        "timeline": "Mahadasha timeline",
+        "duration_explanation": "Mahadasha years are the fixed full lengths in Vimshottari; Antardasha years are proportional and therefore usually decimal values.",
         "current_as_of": "Current as of",
         "mahadasha_table": "Mahadasha timeline",
         "antardasha_table": "Antardasha timeline",
@@ -204,6 +219,7 @@ TEXT = {
         "start": "Start",
         "end": "End",
         "duration_years": "Years",
+        "duration_readable": "Approx. duration",
         "status": "Marker",
         "at_birth": "At birth",
         "current": "Current",
@@ -423,6 +439,64 @@ def format_local_datetime(iso_utc: str, timezone_name: str) -> str:
         local = value.astimezone(timezone.utc)
     return local.strftime("%Y-%m-%d %H:%M %Z")
 
+
+
+def parse_utc_datetime(value: str) -> datetime:
+    """Parse an ISO UTC datetime produced by astrology.py."""
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def humanize_duration(start_utc: str, end_utc: str, language: str) -> str:
+    """Return a readable approximate calendar duration."""
+    seconds = max(0.0, (parse_utc_datetime(end_utc) - parse_utc_datetime(start_utc)).total_seconds())
+    total_days = int(round(seconds / 86400.0))
+    years, remaining_days = divmod(total_days, 365)
+    months, days = divmod(remaining_days, 30)
+    parts: list[str] = []
+    if language == "zh-TW":
+        if years:
+            parts.append(f"{years} 年")
+        if months:
+            parts.append(f"{months} 個月")
+        if days and not years:
+            parts.append(f"{days} 天")
+        return " ".join(parts) or "少於 1 天"
+    if years:
+        parts.append(f"{years} yr")
+    if months:
+        parts.append(f"{months} mo")
+    if days and not years:
+        parts.append(f"{days} d")
+    return " ".join(parts) or "less than 1 day"
+
+
+def humanize_remaining(end_utc: str, as_of_utc: str, language: str) -> str:
+    end_dt = parse_utc_datetime(end_utc)
+    as_of_dt = parse_utc_datetime(as_of_utc)
+    if end_dt <= as_of_dt:
+        return "已結束" if language == "zh-TW" else "Ended"
+    return humanize_duration(as_of_utc, end_utc, language)
+
+
+def period_progress(start_utc: str, end_utc: str, as_of_utc: str) -> float:
+    start_dt = parse_utc_datetime(start_utc)
+    end_dt = parse_utc_datetime(end_utc)
+    as_of_dt = parse_utc_datetime(as_of_utc)
+    duration = (end_dt - start_dt).total_seconds()
+    if duration <= 0:
+        return 0.0
+    return max(0.0, min(1.0, (as_of_dt - start_dt).total_seconds() / duration))
+
+
+def format_year_value(years: float, is_mahadasha: bool, language: str) -> str:
+    """Keep whole Mahadasha years clear; show useful decimals for Antardasha."""
+    unit = "年" if language == "zh-TW" else "years"
+    if is_mahadasha and abs(years - round(years)) < 1e-9:
+        return f"{int(round(years))} {unit}"
+    return f"{years:.3f} {unit}"
 
 def chart_rows(chart: Mapping[str, Any], language: str, include_nakshatra: bool) -> list[dict[str, Any]]:
     t = TEXT[language]
@@ -733,6 +807,50 @@ if chart:
         summary_3.metric(t["balance_at_birth"], balance_value)
         summary_4.metric(t["current_period"], current_text)
 
+        if current_period:
+            md_progress = period_progress(
+                current_period["mahadasha_start_utc"],
+                current_period["mahadasha_end_utc"],
+                dasha["current_utc"],
+            )
+            ad_progress = period_progress(
+                current_period["antardasha_start_utc"],
+                current_period["antardasha_end_utc"],
+                dasha["current_utc"],
+            )
+            with st.container(border=True):
+                st.subheader(t["current_summary"])
+                md_col, ad_col = st.columns(2)
+                with md_col:
+                    st.markdown(f"### {body_label(current_period['mahadasha'], language)}")
+                    st.caption(
+                        f"{format_local_datetime(current_period['mahadasha_start_utc'], context_timezone)} "
+                        f"→ {format_local_datetime(current_period['mahadasha_end_utc'], context_timezone)}"
+                    )
+                    st.metric(
+                        t["remaining"],
+                        humanize_remaining(
+                            current_period["mahadasha_end_utc"], dasha["current_utc"], language
+                        ),
+                    )
+                    st.progress(md_progress, text=f"{t['progress']}：{md_progress * 100:.1f}%")
+                with ad_col:
+                    st.markdown(
+                        f"### {body_label(current_period['mahadasha'], language)} / "
+                        f"{body_label(current_period['antardasha'], language)}"
+                    )
+                    st.caption(
+                        f"{format_local_datetime(current_period['antardasha_start_utc'], context_timezone)} "
+                        f"→ {format_local_datetime(current_period['antardasha_end_utc'], context_timezone)}"
+                    )
+                    st.metric(
+                        t["remaining"],
+                        humanize_remaining(
+                            current_period["antardasha_end_utc"], dasha["current_utc"], language
+                        ),
+                    )
+                    st.progress(ad_progress, text=f"{t['progress']}：{ad_progress * 100:.1f}%")
+
         st.caption(
             f"{t['balance_ends']}："
             f"{format_local_datetime(dasha['birth_balance_end_utc'], context_timezone)}"
@@ -742,18 +860,38 @@ if chart:
             f"{format_local_datetime(dasha['current_utc'], context_timezone)}"
         )
         st.caption(t["dasha_date_note"].format(timezone=context_timezone))
+        st.info(t["duration_explanation"])
         st.warning(t["dasha_convention"])
 
         display_mahadashas = [
             period for period in dasha["mahadashas"] if period.get("within_display_window")
         ]
+        st.subheader(t["timeline"])
+        for period in display_mahadashas:
+            label = body_label(period["lord"], language)
+            marker = period_status(period, language)
+            heading = f"**{label}** · {format_year_value(float(period['duration_years']), True, language)}"
+            if marker:
+                heading += f" · **{marker}**"
+            st.markdown(heading)
+            st.caption(
+                f"{format_local_datetime(period['start_utc'], context_timezone)} → "
+                f"{format_local_datetime(period['end_utc'], context_timezone)}"
+            )
+            if period.get("current"):
+                progress = period_progress(period["start_utc"], period["end_utc"], dasha["current_utc"])
+                st.progress(progress, text=f"{t['progress']}：{progress * 100:.1f}%")
+            else:
+                st.divider()
+
         st.subheader(t["mahadasha_table"])
         mahadasha_rows = [
             {
                 t["mahadasha"]: body_label(period["lord"], language),
                 t["start"]: format_local_datetime(period["start_utc"], context_timezone),
                 t["end"]: format_local_datetime(period["end_utc"], context_timezone),
-                t["duration_years"]: f"{float(period['duration_years']):.3f}",
+                t["duration_years"]: format_year_value(float(period["duration_years"]), True, language),
+                t["duration_readable"]: humanize_duration(period["start_utc"], period["end_utc"], language),
                 t["status"]: period_status(period, language),
             }
             for period in display_mahadashas
@@ -787,7 +925,8 @@ if chart:
                 t["antardasha"]: body_label(period["lord"], language),
                 t["start"]: format_local_datetime(period["start_utc"], context_timezone),
                 t["end"]: format_local_datetime(period["end_utc"], context_timezone),
-                t["duration_years"]: f"{float(period['duration_years']):.3f}",
+                t["duration_years"]: format_year_value(float(period["duration_years"]), False, language),
+                t["duration_readable"]: humanize_duration(period["start_utc"], period["end_utc"], language),
                 t["status"]: period_status(period, language),
             }
             for period in selected_md["antardashas"]
