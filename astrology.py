@@ -70,6 +70,8 @@ PLANET_IDS = {
 
 VARGA_NAMES = {
     1: "Rashi",
+    2: "Hora",
+    3: "Drekkana",
     9: "Navamsha",
     10: "Dashamsha",
 }
@@ -224,6 +226,9 @@ def varga_longitude(longitude: float, division: int) -> float:
 
     Supported divisions:
     - D1 Rashi: unchanged.
+    - D2 Hora: odd signs map first half to Leo and second half to Cancer;
+      even signs reverse the order.
+    - D3 Drekkana: the three decans map to the natal sign, fifth, and ninth.
     - D9 Navamsha: movable signs begin from themselves, fixed signs from the ninth,
       and dual signs from the fifth.
     - D10 Dashamsha: odd signs begin from themselves and even signs from the ninth.
@@ -237,6 +242,24 @@ def varga_longitude(longitude: float, division: int) -> float:
 
     sign_index = min(11, int(longitude // 30.0))
     degree_in_sign = longitude - sign_index * 30.0
+
+    if division == 2:
+        part_index = 0 if degree_in_sign < 15.0 else 1
+        within_part = degree_in_sign - part_index * 15.0
+        if sign_index % 2 == 0:
+            target_sign = 4 if part_index == 0 else 3  # Leo / Cancer
+        else:
+            target_sign = 3 if part_index == 0 else 4  # Cancer / Leo
+        target_degree = within_part * 2.0
+        return _normalize_longitude(target_sign * 30.0 + target_degree)
+
+    if division == 3:
+        part_size = 10.0
+        part_index = min(2, int(degree_in_sign // part_size))
+        within_part = degree_in_sign - part_index * part_size
+        target_sign = (sign_index + part_index * 4) % 12
+        target_degree = within_part * 3.0
+        return _normalize_longitude(target_sign * 30.0 + target_degree)
 
     if division == 9:
         part_size = 30.0 / 9.0
@@ -403,6 +426,33 @@ def _calculate_d1(jd_ut: float, latitude: float, longitude: float) -> dict[str, 
     }
 
 
+def calculate_moon_chart(base_positions: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Create a Chandra Lagna chart using the Moon sign as whole-sign house 1.
+
+    This is a reference chart, not a divisional varga: sidereal longitudes stay
+    unchanged and only the whole-sign house frame rotates to the Moon.
+    """
+    moon = next((item for item in base_positions if item["code"] == "Moon"), None)
+    if moon is None:
+        raise ValueError("base_positions must include Moon")
+    moon_sign_index = int(moon["sign_index"])
+
+    positions: list[dict[str, Any]] = []
+    for base in base_positions:
+        item = dict(base)
+        item["house"] = _house_from_sign(int(item["sign_index"]), moon_sign_index)
+        positions.append(item)
+
+    return {
+        "chart_code": "Moon",
+        "division": None,
+        "name": "Chandra Lagna",
+        "house_system": "Whole Sign from Moon",
+        "ascendant_sign_index": moon_sign_index,
+        "positions": positions,
+    }
+
+
 def _period_contains(start: datetime, end: datetime, moment: datetime | None) -> bool:
     return moment is not None and start <= moment < end
 
@@ -549,7 +599,7 @@ def calculate_chart(
     longitude: float,
     current_utc: datetime | None = None,
 ) -> dict[str, Any]:
-    """Calculate Lahiri D1, D9, D10 charts and Vimshottari dasha data."""
+    """Calculate Lahiri D1, Moon, D2, D3, D9, D10, and Vimshottari data."""
     if utc_dt.tzinfo is None:
         raise ValueError("utc_dt must be timezone-aware")
     if not -90.0 <= latitude <= 90.0:
@@ -560,6 +610,9 @@ def calculate_chart(
     utc_dt = utc_dt.astimezone(timezone.utc)
     jd_ut = _julian_day_utc(utc_dt)
     d1 = _calculate_d1(jd_ut, latitude, longitude)
+    moon_chart = calculate_moon_chart(d1["positions"])
+    d2 = calculate_varga_chart(d1["positions"], 2)
+    d3 = calculate_varga_chart(d1["positions"], 3)
     d9 = calculate_varga_chart(d1["positions"], 9)
     d10 = calculate_varga_chart(d1["positions"], 10)
 
@@ -581,6 +634,9 @@ def calculate_chart(
         "dasha_year_days": DASHA_YEAR_DAYS,
         "charts": {
             "D1": d1,
+            "Moon": moon_chart,
+            "D2": d2,
+            "D3": d3,
             "D9": d9,
             "D10": d10,
         },

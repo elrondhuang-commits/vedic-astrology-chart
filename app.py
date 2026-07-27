@@ -44,7 +44,7 @@ TEXT = {
     "zh-TW": {
         "page_title": "吠陀占星本命盤",
         "title": "吠陀占星本命盤",
-        "subtitle": "D1 本命盤、D9 九分盤、D10 十分盤與 Vimshottari 大運",
+        "subtitle": "D1 本命盤、月亮盤、D2／D3／D9／D10 分盤與 Vimshottari 大運",
         "language": "語言",
         "birth_date": "出生日期",
         "birth_time": "出生時間",
@@ -74,14 +74,22 @@ TEXT = {
         "nonexistent": "此本地時間因夏令時間開始而不存在。請修正出生時間。",
         "invalid_timezone": "城市提供的時區無效，請選擇其他搜尋結果。",
         "tab_d1": "D1 本命盤",
+        "tab_moon": "月亮盤",
         "tab_vargas": "分盤",
         "tab_dasha": "大運",
         "tab_positions": "行星表",
         "tab_notes": "計算說明",
         "d1_chart": "北印度式 D1 本命盤",
+        "moon_chart": "北印度式月亮盤（Chandra Lagna）",
+        "moon_description": "月亮盤不是另一張分盤，而是以月亮所在星座作為第一宮，將 D1 的星體依 Whole Sign 重新排宮；星體黃經本身不變。",
+        "moon_positions": "月亮盤行星位置",
         "division_select": "選擇分盤",
+        "d2_label": "D2 二分盤（Hora）",
+        "d3_label": "D3 三分盤（Drekkana）",
         "d9_label": "D9 九分盤（Navamsha）",
         "d10_label": "D10 十分盤（Dashamsha）",
+        "d2_description": "D2 Hora 常用於財富、資源、累積方式與物質支持的輔助判讀。此版本採傳統 Parashari 太陽／月亮 Hora。",
+        "d3_description": "D3 Drekkana 常用於手足、勇氣、行動力、努力方式與生命活力的輔助判讀。",
         "d9_description": "D9 是最常用的分盤之一，常用於婚姻、關係、法則與行星成熟度的輔助判讀。",
         "d10_description": "D10 常用於職涯、工作角色、責任與社會表現的輔助判讀。",
         "varga_positions": "分盤行星位置",
@@ -129,8 +137,8 @@ TEXT = {
         "local_birth_time": "出生地當地時間",
         "calculated_city": "出生地",
         "settings": "計算設定",
-        "settings_text": "恆星黃道 Lahiri ayanamsha；True Node；Whole Sign houses；Parashari D9/D10；Vimshottari 120 年週期。",
-        "varga_method_note": "D9：活動星座從本星座起、固定星座從第九星座起、雙體星座從第五星座起。D10：奇數星座從本星座起，偶數星座從第九星座起。分盤上升與行星均由 D1 恆星黃經映射。",
+        "settings_text": "恆星黃道 Lahiri ayanamsha；True Node；Whole Sign houses；月亮盤；Parashari D2/D3/D9/D10；Vimshottari 120 年週期。",
+        "varga_method_note": "月亮盤：以月亮星座作第一宮，D1 黃經不變。D2：奇數星座前半為太陽 Hora（獅子）、後半為月亮 Hora（巨蟹）；偶數星座相反。D3：每 10° 一段，依序落入本星座、第五與第九星座。D9：活動星座從本星座起、固定星座從第九星座起、雙體星座從第五星座起。D10：奇數星座從本星座起，偶數星座從第九星座起。",
         "dasha_method_note": "起始大運依出生月亮所在 Nakshatra 的守護星決定；出生時剩餘比例依月亮尚未走完的星宿比例計算。次運長度＝大運年數 × 次運守護星年數 ÷ 120。",
         "privacy": "隱私",
         "privacy_text": "本網站不使用資料庫，不會主動儲存你輸入的出生資料。Streamlit 與網路基礎設施仍可能產生一般技術日誌。",
@@ -145,7 +153,7 @@ TEXT = {
     "en": {
         "page_title": "Vedic Natal Chart",
         "title": "Vedic Natal Chart",
-        "subtitle": "D1 Rashi, D9 Navamsha, D10 Dashamsha, and Vimshottari dasha",
+        "subtitle": "D1 Rashi, Moon chart, D2/D3/D9/D10 vargas, and Vimshottari dasha",
         "language": "Language",
         "birth_date": "Birth date",
         "birth_time": "Birth time",
@@ -175,14 +183,22 @@ TEXT = {
         "nonexistent": "This local time did not exist because daylight saving time began. Correct the birth time.",
         "invalid_timezone": "The selected result has an invalid timezone. Choose another result.",
         "tab_d1": "D1 Rashi",
+        "tab_moon": "Moon chart",
         "tab_vargas": "Divisional charts",
         "tab_dasha": "Dasha",
         "tab_positions": "Planet table",
         "tab_notes": "Calculation notes",
         "d1_chart": "North Indian D1 Rashi chart",
+        "moon_chart": "North Indian Moon chart (Chandra Lagna)",
+        "moon_description": "The Moon chart is not a separate varga. It uses the Moon's sign as whole-sign house 1 and recalculates houses from the unchanged D1 sidereal longitudes.",
+        "moon_positions": "Moon-chart positions",
         "division_select": "Select a divisional chart",
+        "d2_label": "D2 Hora",
+        "d3_label": "D3 Drekkana",
         "d9_label": "D9 Navamsha",
         "d10_label": "D10 Dashamsha",
+        "d2_description": "D2 Hora is commonly consulted for wealth, resources, accumulation patterns, and material support. This version uses the classical Parashari Sun/Moon Hora.",
+        "d3_description": "D3 Drekkana is commonly consulted for siblings, courage, initiative, effort, and vitality.",
         "d9_description": "D9 is one of the most frequently used divisional charts and is commonly consulted for marriage, relationships, dharma, and planetary maturity.",
         "d10_description": "D10 is commonly consulted for career, work roles, responsibility, and public expression.",
         "varga_positions": "Divisional positions",
@@ -230,8 +246,8 @@ TEXT = {
         "local_birth_time": "Local birth time",
         "calculated_city": "Birth place",
         "settings": "Calculation settings",
-        "settings_text": "Sidereal Lahiri ayanamsha; True Node; Whole Sign houses; Parashari D9/D10; 120-year Vimshottari cycle.",
-        "varga_method_note": "D9 starts from the same sign for movable signs, the ninth for fixed signs, and the fifth for dual signs. D10 starts from the same sign for odd signs and the ninth for even signs. Divisional Ascendants and planets are mapped from D1 sidereal longitudes.",
+        "settings_text": "Sidereal Lahiri ayanamsha; True Node; Whole Sign houses; Moon chart; Parashari D2/D3/D9/D10; 120-year Vimshottari cycle.",
+        "varga_method_note": "Moon chart: the Moon sign becomes house 1 while D1 longitudes remain unchanged. D2: in odd signs the first half is Sun Hora (Leo) and the second half Moon Hora (Cancer), reversed in even signs. D3: each 10-degree decan maps to the natal sign, fifth, and ninth. D9 and D10 use the stated Parashari mappings.",
         "dasha_method_note": "The birth Moon's Nakshatra ruler starts the Mahadasha. The balance at birth follows the untraversed fraction of that Nakshatra. Antardasha length = Mahadasha years × Antardasha-lord years ÷ 120.",
         "privacy": "Privacy",
         "privacy_text": "This app uses no database and does not intentionally store birth data you enter. Streamlit and network infrastructure may still produce ordinary technical logs.",
@@ -727,7 +743,11 @@ if not selected_city:
 
 chart = st.session_state.get("chart")
 chart_context = st.session_state.get("chart_context", {})
-if chart and "charts" not in chart:
+required_chart_codes = {"D1", "Moon", "D2", "D3", "D9", "D10"}
+if chart and (
+    "charts" not in chart
+    or not required_chart_codes.issubset(set(chart.get("charts", {}).keys()))
+):
     st.warning(t["chart_missing"])
     chart = None
 
@@ -747,9 +767,10 @@ if chart:
             f"**UTC：** {chart['utc_datetime']} · **JD(UT)：** {chart['julian_day_ut']:.6f}"
         )
 
-    tab_d1, tab_vargas, tab_dasha, tab_positions, tab_notes = st.tabs(
+    tab_d1, tab_moon, tab_vargas, tab_dasha, tab_positions, tab_notes = st.tabs(
         [
             t["tab_d1"],
+            t["tab_moon"],
             t["tab_vargas"],
             t["tab_dasha"],
             t["tab_positions"],
@@ -761,20 +782,41 @@ if chart:
         st.subheader(t["d1_chart"])
         render_chart_svg(chart["charts"]["D1"], language)
 
+    with tab_moon:
+        st.info(t["moon_description"])
+        st.subheader(t["moon_chart"])
+        moon_chart = chart["charts"]["Moon"]
+        render_chart_svg(moon_chart, language)
+        st.subheader(t["moon_positions"])
+        st.dataframe(
+            chart_rows(moon_chart, language, include_nakshatra=True),
+            use_container_width=True,
+            hide_index=True,
+        )
+
     with tab_vargas:
+        varga_labels = {
+            "D2": t["d2_label"],
+            "D3": t["d3_label"],
+            "D9": t["d9_label"],
+            "D10": t["d10_label"],
+        }
+        varga_descriptions = {
+            "D2": t["d2_description"],
+            "D3": t["d3_description"],
+            "D9": t["d9_description"],
+            "D10": t["d10_description"],
+        }
         division_code = st.selectbox(
             t["division_select"],
-            options=["D9", "D10"],
-            format_func=lambda code: t["d9_label"] if code == "D9" else t["d10_label"],
+            options=["D2", "D3", "D9", "D10"],
+            format_func=lambda code: varga_labels[code],
             key="division_code",
         )
-        if division_code == "D9":
-            st.info(t["d9_description"])
-        else:
-            st.info(t["d10_description"])
+        st.info(varga_descriptions[division_code])
 
         varga_chart = chart["charts"][division_code]
-        st.subheader(t["d9_label"] if division_code == "D9" else t["d10_label"])
+        st.subheader(varga_labels[division_code])
         render_chart_svg(varga_chart, language)
         st.subheader(t["varga_positions"])
         st.dataframe(

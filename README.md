@@ -140,3 +140,11 @@ This project is for educational, cultural, and entertainment purposes only. It d
 - Project source code: GNU AGPL-3.0. See `LICENSE`.
 
 Swiss Ephemeris is dual-licensed. This AGPL project is intended to follow the open-source licensing path; review Astrodienst's current licensing terms before changing the distribution model or using a proprietary deployment.
+
+## v5 dasha interface
+
+- Current Mahadasha and Antardasha summary cards
+- Remaining time and period progress
+- Mahadasha timeline
+- Full Mahadasha year lengths retained
+- Decimal Antardasha years plus readable approximate duration
