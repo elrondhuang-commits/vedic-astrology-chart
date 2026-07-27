@@ -1,11 +1,12 @@
-"""North Indian D1 chart SVG renderer.
+"""Responsive North Indian chart SVG renderer.
 
-House 1 is always the fixed upper-centre compartment. Signs rotate with the Ascendant.
+House 1 is always the fixed upper-centre compartment. Signs rotate with the
+Ascendant of the supplied D1 or divisional chart.
 """
 from __future__ import annotations
 
 from html import escape
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 # Visual centres for the 12 fixed houses in a classic North Indian chart.
 HOUSE_CENTRES = {
@@ -22,6 +23,21 @@ HOUSE_CENTRES = {
     11: (525, 155),
     12: (445, 70),
 }
+
+SIGN_KEYS = (
+    "Aries",
+    "Taurus",
+    "Gemini",
+    "Cancer",
+    "Leo",
+    "Virgo",
+    "Libra",
+    "Scorpio",
+    "Sagittarius",
+    "Capricorn",
+    "Aquarius",
+    "Pisces",
+)
 
 PLANET_ABBR = {
     "Ascendant": "As",
@@ -41,15 +57,27 @@ def _degree_text(value: float) -> str:
     return f"{value:.1f}°"
 
 
+def _pack_lines(entries: Sequence[str]) -> tuple[list[str], bool]:
+    """Fit up to ten bodies without silently dropping clustered placements."""
+    if len(entries) <= 5:
+        return list(entries), False
+
+    packed: list[str] = []
+    for index in range(0, len(entries), 2):
+        packed.append(" · ".join(entries[index : index + 2]))
+    return packed, True
+
+
 def render_north_indian_svg(
     chart: Mapping[str, Any],
     sign_labels: Mapping[str, str] | None = None,
     planet_labels: Mapping[str, str] | None = None,
 ) -> str:
-    """Return a self-contained responsive SVG string."""
+    """Return a self-contained responsive SVG for a D1 or divisional chart."""
     sign_labels = sign_labels or {}
     planet_labels = planet_labels or {}
     asc_sign = int(chart["ascendant_sign_index"])
+    chart_code = str(chart.get("chart_code", "D1"))
 
     by_house: dict[int, list[Mapping[str, Any]]] = {house: [] for house in range(1, 13)}
     for item in chart["positions"]:
@@ -69,10 +97,7 @@ def render_north_indian_svg(
     for house in range(1, 13):
         x, y = HOUSE_CENTRES[house]
         sign_index = (asc_sign + house - 1) % 12
-        sign_key = (
-            "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-            "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
-        )[sign_index]
+        sign_key = SIGN_KEYS[sign_index]
         sign_text = sign_labels.get(sign_key, sign_key)
 
         text_elements.append(
@@ -80,26 +105,36 @@ def render_north_indian_svg(
             f'{escape(str(sign_text))} · H{house}</text>'
         )
 
-        bodies = sorted(by_house[house], key=lambda p: (p["code"] != "Ascendant", p["longitude"]))
-        lines: list[str] = []
+        bodies = sorted(
+            by_house[house],
+            key=lambda position: (
+                position["code"] != "Ascendant",
+                float(position["longitude"]),
+            ),
+        )
+        entries: list[str] = []
         for body in bodies:
             code = str(body["code"])
             label = planet_labels.get(code, PLANET_ABBR.get(code, code))
             retro = " ℞" if body.get("retrograde") and code not in ("Rahu", "Ketu") else ""
-            lines.append(f"{label} {_degree_text(float(body['degree_in_sign']))}{retro}")
+            entries.append(f"{label} {_degree_text(float(body['degree_in_sign']))}{retro}")
 
-        for idx, line in enumerate(lines[:5]):
+        lines, compact = _pack_lines(entries)
+        body_class = "body compact" if compact else "body"
+        line_height = 17 if compact else 18
+        for index, line in enumerate(lines):
             text_elements.append(
-                f'<text x="{x}" y="{y + idx * 18}" class="body" text-anchor="middle">'
-                f'{escape(line)}</text>'
+                f'<text x="{x}" y="{y + index * line_height}" class="{body_class}" '
+                f'text-anchor="middle">{escape(line)}</text>'
             )
 
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="North Indian D1 chart">
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="North Indian {escape(chart_code)} chart">
 <style>
   rect, line {{ fill: none; stroke: currentColor; stroke-width: 2; vector-effect: non-scaling-stroke; }}
   text {{ fill: currentColor; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
   .sign {{ font-size: 13px; font-weight: 700; }}
   .body {{ font-size: 13px; }}
+  .compact {{ font-size: 10.5px; }}
 </style>
 {line_elements}
 {''.join(text_elements)}

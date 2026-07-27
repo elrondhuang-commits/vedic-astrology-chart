@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from datetime import date, datetime, time
-from typing import Any
+from datetime import date, datetime, time, timezone
+from typing import Any, Mapping
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import requests
 import streamlit as st
@@ -42,7 +43,8 @@ TAIWAN_CITY_ALIASES = {
 TEXT = {
     "zh-TW": {
         "page_title": "吠陀占星本命盤",
-        "title": "吠陀占星本命盤（D1）",
+        "title": "吠陀占星本命盤",
+        "subtitle": "D1 本命盤、D9 九分盤、D10 十分盤與 Vimshottari 大運",
         "language": "語言",
         "birth_date": "出生日期",
         "birth_time": "出生時間",
@@ -55,7 +57,7 @@ TEXT = {
         "invalid_time": "時間格式不正確。請輸入 00:00 到 23:59，例如 08:05。",
         "time_tip": "可分開調整小時與分鐘，也可切換為自行輸入完整時間。",
         "city_search": "出生城市",
-        "city_notice": "城市搜尋建議使用英文或羅馬拼音，例如 Tainan、Taipei。系統會自動辨識部分常見的台灣中文縣市名稱；無論使用哪種語言，都請核對國家／地區、行政區、座標與 IANA 時區。",
+        "city_notice": "城市搜尋建議使用英文或羅馬拼音，例如 Tainan、Taipei。系統會自動辨識部分常見的台灣中文縣市名稱；請核對國家／地區、行政區、座標與 IANA 時區。",
         "city_help": "建議輸入英文或羅馬拼音，例如 Tainan、Taipei 或 Tokyo。輸入至少 2 個字元，再從結果中選擇正確城市。",
         "city_placeholder": "例如 Tainan、Taipei、Tokyo",
         "taiwan_alias": "已將「{original}」辨識為台灣地名，改用「{canonical}」並限定台灣（TW）搜尋。",
@@ -63,7 +65,7 @@ TEXT = {
         "select_city": "選擇城市",
         "timezone": "IANA 時區",
         "coordinates": "座標",
-        "calculate": "計算本命盤",
+        "calculate": "計算星盤與大運",
         "enter_city": "請先搜尋並選擇出生城市。",
         "api_error": "城市搜尋暫時失敗，請稍後重試。",
         "no_results": "找不到城市。請改用英文／羅馬拼音、檢查拼字，或嘗試較大的鄰近城市。",
@@ -71,30 +73,71 @@ TEXT = {
         "choose_offset": "選擇當時的 UTC 位移",
         "nonexistent": "此本地時間因夏令時間開始而不存在。請修正出生時間。",
         "invalid_timezone": "城市提供的時區無效，請選擇其他搜尋結果。",
-        "chart": "北印度式 D1 星盤",
-        "positions": "行星位置",
+        "tab_d1": "D1 本命盤",
+        "tab_vargas": "分盤",
+        "tab_dasha": "大運",
+        "tab_positions": "行星表",
+        "tab_notes": "計算說明",
+        "d1_chart": "北印度式 D1 本命盤",
+        "division_select": "選擇分盤",
+        "d9_label": "D9 九分盤（Navamsha）",
+        "d10_label": "D10 十分盤（Dashamsha）",
+        "d9_description": "D9 是最常用的分盤之一，常用於婚姻、關係、法則與行星成熟度的輔助判讀。",
+        "d10_description": "D10 常用於職涯、工作角色、責任與社會表現的輔助判讀。",
+        "varga_positions": "分盤行星位置",
+        "positions": "D1 行星位置",
         "body": "天體",
         "sign": "星座",
         "degree": "星座內度數",
+        "varga_degree": "分盤星座內度數",
         "nakshatra": "宿（Nakshatra）",
         "pada": "Pada",
         "house": "宮位",
         "motion": "狀態",
         "direct": "順行",
         "retrograde": "逆行",
+        "dasha_title": "Vimshottari 大運",
+        "birth_nakshatra": "出生月亮星宿",
+        "birth_mahadasha": "出生時大運",
+        "balance_at_birth": "出生時剩餘",
+        "balance_ends": "出生時大運結束",
+        "current_period": "目前期間",
+        "current_as_of": "「目前」判定時間",
+        "mahadasha_table": "大運表",
+        "antardasha_table": "次運表",
+        "select_mahadasha": "查看哪一個大運的次運",
+        "mahadasha": "大運",
+        "antardasha": "次運",
+        "start": "開始",
+        "end": "結束",
+        "duration_years": "年數",
+        "status": "標記",
+        "at_birth": "出生時",
+        "current": "目前",
+        "none": "無",
+        "dasha_date_note": "所有大運日期均換算為出生地時區：{timezone}。期間以開始時間包含、結束時間不包含。",
+        "dasha_convention": "日期換算採平均公曆年 365.2425 日。不同軟體若使用平均恆星年、365.25 日或 360 日年，邊界日期可能略有差異。",
+        "calculation_context": "本次計算資料",
+        "local_birth_time": "出生地當地時間",
+        "calculated_city": "出生地",
         "settings": "計算設定",
+        "settings_text": "恆星黃道 Lahiri ayanamsha；True Node；Whole Sign houses；Parashari D9/D10；Vimshottari 120 年週期。",
+        "varga_method_note": "D9：活動星座從本星座起、固定星座從第九星座起、雙體星座從第五星座起。D10：奇數星座從本星座起，偶數星座從第九星座起。分盤上升與行星均由 D1 恆星黃經映射。",
+        "dasha_method_note": "起始大運依出生月亮所在 Nakshatra 的守護星決定；出生時剩餘比例依月亮尚未走完的星宿比例計算。次運長度＝大運年數 × 次運守護星年數 ÷ 120。",
         "privacy": "隱私",
         "privacy_text": "本網站不使用資料庫，不會主動儲存你輸入的出生資料。Streamlit 與網路基礎設施仍可能產生一般技術日誌。",
         "sources": "資料來源",
         "sources_text": "城市資料：Open-Meteo Geocoding API（基於 GeoNames）。天文計算：Swiss Ephemeris / pyswisseph。歷史時區：Python zoneinfo 與 tzdata。",
         "disclaimer": "聲明",
-        "disclaimer_text": "本網站內容僅供教育、文化與娛樂用途，不構成醫療、心理、法律、稅務、投資或其他專業建議。重大決策請諮詢合格專業人士。",
+        "disclaimer_text": "本網站內容僅供教育、文化與娛樂用途，不構成醫療、心理、法律、稅務、投資或其他專業建議。重大決策請諮詢合格專業人士。分盤與大運不應作為單一決策依據。",
         "license": "本專案採 AGPL-3.0 授權。",
         "request_error": "無法完成計算：",
+        "chart_missing": "目前工作階段中的舊資料格式已失效，請重新按一次「計算星盤與大運」。",
     },
     "en": {
         "page_title": "Vedic Natal Chart",
-        "title": "Vedic Natal Chart (D1)",
+        "title": "Vedic Natal Chart",
+        "subtitle": "D1 Rashi, D9 Navamsha, D10 Dashamsha, and Vimshottari dasha",
         "language": "Language",
         "birth_date": "Birth date",
         "birth_time": "Birth time",
@@ -115,7 +158,7 @@ TEXT = {
         "select_city": "Select city",
         "timezone": "IANA timezone",
         "coordinates": "Coordinates",
-        "calculate": "Calculate chart",
+        "calculate": "Calculate charts and dasha",
         "enter_city": "Search for and select a birth city first.",
         "api_error": "City search is temporarily unavailable. Please try again.",
         "no_results": "No cities found. Try an English/romanized spelling or a larger nearby city.",
@@ -123,45 +166,118 @@ TEXT = {
         "choose_offset": "Select the UTC offset in effect",
         "nonexistent": "This local time did not exist because daylight saving time began. Correct the birth time.",
         "invalid_timezone": "The selected result has an invalid timezone. Choose another result.",
-        "chart": "North Indian D1 chart",
-        "positions": "Planetary positions",
+        "tab_d1": "D1 Rashi",
+        "tab_vargas": "Divisional charts",
+        "tab_dasha": "Dasha",
+        "tab_positions": "Planet table",
+        "tab_notes": "Calculation notes",
+        "d1_chart": "North Indian D1 Rashi chart",
+        "division_select": "Select a divisional chart",
+        "d9_label": "D9 Navamsha",
+        "d10_label": "D10 Dashamsha",
+        "d9_description": "D9 is one of the most frequently used divisional charts and is commonly consulted for marriage, relationships, dharma, and planetary maturity.",
+        "d10_description": "D10 is commonly consulted for career, work roles, responsibility, and public expression.",
+        "varga_positions": "Divisional positions",
+        "positions": "D1 planetary positions",
         "body": "Body",
         "sign": "Sign",
         "degree": "Degree in sign",
+        "varga_degree": "Degree in varga sign",
         "nakshatra": "Nakshatra",
         "pada": "Pada",
         "house": "House",
         "motion": "Motion",
         "direct": "Direct",
         "retrograde": "Retrograde",
+        "dasha_title": "Vimshottari dasha",
+        "birth_nakshatra": "Birth Moon nakshatra",
+        "birth_mahadasha": "Mahadasha at birth",
+        "balance_at_birth": "Balance at birth",
+        "balance_ends": "Birth Mahadasha ends",
+        "current_period": "Current period",
+        "current_as_of": "Current as of",
+        "mahadasha_table": "Mahadasha timeline",
+        "antardasha_table": "Antardasha timeline",
+        "select_mahadasha": "Choose a Mahadasha to inspect",
+        "mahadasha": "Mahadasha",
+        "antardasha": "Antardasha",
+        "start": "Start",
+        "end": "End",
+        "duration_years": "Years",
+        "status": "Marker",
+        "at_birth": "At birth",
+        "current": "Current",
+        "none": "None",
+        "dasha_date_note": "All dasha dates are shown in the birth-place timezone: {timezone}. Start times are inclusive and end times are exclusive.",
+        "dasha_convention": "Civil dates use a mean Gregorian year of 365.2425 days. Software using a mean sidereal year, 365.25 days, or a 360-day year can show slightly different boundaries.",
+        "calculation_context": "Calculation context",
+        "local_birth_time": "Local birth time",
+        "calculated_city": "Birth place",
         "settings": "Calculation settings",
+        "settings_text": "Sidereal Lahiri ayanamsha; True Node; Whole Sign houses; Parashari D9/D10; 120-year Vimshottari cycle.",
+        "varga_method_note": "D9 starts from the same sign for movable signs, the ninth for fixed signs, and the fifth for dual signs. D10 starts from the same sign for odd signs and the ninth for even signs. Divisional Ascendants and planets are mapped from D1 sidereal longitudes.",
+        "dasha_method_note": "The birth Moon's Nakshatra ruler starts the Mahadasha. The balance at birth follows the untraversed fraction of that Nakshatra. Antardasha length = Mahadasha years × Antardasha-lord years ÷ 120.",
         "privacy": "Privacy",
         "privacy_text": "This app uses no database and does not intentionally store birth data you enter. Streamlit and network infrastructure may still produce ordinary technical logs.",
         "sources": "Data sources",
         "sources_text": "Cities: Open-Meteo Geocoding API (based on GeoNames). Astronomy: Swiss Ephemeris / pyswisseph. Historical timezones: Python zoneinfo and tzdata.",
         "disclaimer": "Disclaimer",
-        "disclaimer_text": "For educational, cultural, and entertainment purposes only. This is not medical, psychological, legal, tax, investment, or other professional advice. Consult qualified professionals for important decisions.",
+        "disclaimer_text": "For educational, cultural, and entertainment purposes only. This is not medical, psychological, legal, tax, investment, or other professional advice. Divisional charts and dasha periods should not be used as a sole basis for important decisions.",
         "license": "Licensed under AGPL-3.0.",
-        "request_error": "Unable to calculate chart: ",
+        "request_error": "Unable to calculate: ",
+        "chart_missing": "Old session data no longer matches this version. Press “Calculate charts and dasha” again.",
     },
 }
 
 SIGN_ZH = {
-    "Aries": "牡羊座", "Taurus": "金牛座", "Gemini": "雙子座", "Cancer": "巨蟹座",
-    "Leo": "獅子座", "Virgo": "處女座", "Libra": "天秤座", "Scorpio": "天蠍座",
-    "Sagittarius": "射手座", "Capricorn": "摩羯座", "Aquarius": "水瓶座", "Pisces": "雙魚座",
+    "Aries": "牡羊座",
+    "Taurus": "金牛座",
+    "Gemini": "雙子座",
+    "Cancer": "巨蟹座",
+    "Leo": "獅子座",
+    "Virgo": "處女座",
+    "Libra": "天秤座",
+    "Scorpio": "天蠍座",
+    "Sagittarius": "射手座",
+    "Capricorn": "摩羯座",
+    "Aquarius": "水瓶座",
+    "Pisces": "雙魚座",
 }
 BODY_ZH = {
-    "Ascendant": "上升", "Sun": "太陽", "Moon": "月亮", "Mars": "火星",
-    "Mercury": "水星", "Jupiter": "木星", "Venus": "金星", "Saturn": "土星",
-    "Rahu": "羅喉", "Ketu": "計都",
+    "Ascendant": "上升",
+    "Sun": "太陽",
+    "Moon": "月亮",
+    "Mars": "火星",
+    "Mercury": "水星",
+    "Jupiter": "木星",
+    "Venus": "金星",
+    "Saturn": "土星",
+    "Rahu": "羅喉",
+    "Ketu": "計都",
 }
 BODY_ABBR_ZH = {
-    "Ascendant": "升", "Sun": "日", "Moon": "月", "Mars": "火", "Mercury": "水",
-    "Jupiter": "木", "Venus": "金", "Saturn": "土", "Rahu": "羅", "Ketu": "計",
+    "Ascendant": "升",
+    "Sun": "日",
+    "Moon": "月",
+    "Mars": "火",
+    "Mercury": "水",
+    "Jupiter": "木",
+    "Venus": "金",
+    "Saturn": "土",
+    "Rahu": "羅",
+    "Ketu": "計",
 }
 
-st.set_page_config(page_title="Vedic Natal Chart", page_icon="✨", layout="wide")
+st.set_page_config(page_title="吠陀占星 | Vedic Astrology", page_icon="✨", layout="wide")
+st.markdown(
+    """
+    <style>
+      .block-container {max-width: 1120px; padding-top: 1.6rem; padding-bottom: 3rem;}
+      [data-testid="stMetricValue"] {font-size: 1.35rem;}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 def prepare_city_search(query: str) -> tuple[str, str | None, bool]:
@@ -198,39 +314,37 @@ def search_cities(query: str, language: str, country_code: str | None = None) ->
     response = requests.get(GEOCODING_URL, params=params, timeout=12)
     response.raise_for_status()
     data = response.json()
-    results = []
+    results: list[dict[str, Any]] = []
     for item in data.get("results", []):
         if not item.get("timezone"):
             continue
-        results.append({
-            "id": item.get("id"),
-            "name": item.get("name", ""),
-            "country": item.get("country", ""),
-            "country_code": item.get("country_code", ""),
-            "admin1": item.get("admin1", ""),
-            "latitude": float(item["latitude"]),
-            "longitude": float(item["longitude"]),
-            "timezone": item["timezone"],
-        })
+        results.append(
+            {
+                "id": item.get("id"),
+                "name": item.get("name", ""),
+                "country": item.get("country", ""),
+                "country_code": item.get("country_code", ""),
+                "admin1": item.get("admin1", ""),
+                "latitude": float(item["latitude"]),
+                "longitude": float(item["longitude"]),
+                "timezone": item["timezone"],
+            }
+        )
     return results
 
 
 def _place_key(value: str) -> str:
-    """Normalize a place label for comparison without changing what users see."""
     normalized = unicodedata.normalize("NFKC", value).strip().casefold()
     normalized = normalized.replace("臺", "台").replace("湾", "灣")
     return re.sub(r"[\s,，._\-()（）]+", "", normalized)
 
 
-def city_label(city: dict[str, Any], language: str) -> str:
-    """Build a user-facing label while keeping raw geocoder data unchanged."""
+def city_display_parts(city: Mapping[str, Any], language: str) -> list[str]:
+    """Build normalized display parts without modifying raw geocoder data."""
     country_code = str(city.get("country_code", "")).upper()
     country = str(city.get("country", ""))
     admin1 = str(city.get("admin1", ""))
 
-    # GeoNames/Open-Meteo may localize Taiwan as variants such as
-    # "台灣省", "臺灣省", "台湾省", or "Taiwan Province". For TW
-    # results, show the neutral short label requested by this app.
     if country_code == "TW":
         country = "台灣" if language == "zh-TW" else "Taiwan"
         province_labels = {
@@ -256,13 +370,15 @@ def city_label(city: dict[str, Any], language: str) -> str:
         if part and key not in seen:
             parts.append(part)
             seen.add(key)
+    return parts
 
-    place = ", ".join(parts)
-    return f"{place} — {city['latitude']:.4f}, {city['longitude']:.4f} — {city['timezone']}"
+
+def city_label(city: Mapping[str, Any], language: str) -> str:
+    place = ", ".join(city_display_parts(city, language))
+    return f"{place} — {float(city['latitude']):.4f}, {float(city['longitude']):.4f} — {city['timezone']}"
 
 
 def parse_manual_time(value: str) -> time | None:
-    """Parse a user-entered 24-hour time in H:MM or HH:MM form."""
     normalized = unicodedata.normalize("NFKC", value).strip()
     match = re.fullmatch(r"(\d{1,2})\s*:\s*(\d{1,2})", normalized)
     if not match:
@@ -289,14 +405,89 @@ def format_degree(value: float) -> str:
     return f"{degrees:02d}° {minutes:02d}′ {seconds:02d}″"
 
 
+def body_label(code: str, language: str) -> str:
+    return BODY_ZH.get(code, code) if language == "zh-TW" else code
+
+
+def sign_label(sign: str, language: str) -> str:
+    return SIGN_ZH.get(sign, sign) if language == "zh-TW" else sign
+
+
+def format_local_datetime(iso_utc: str, timezone_name: str) -> str:
+    value = datetime.fromisoformat(iso_utc)
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    try:
+        local = value.astimezone(ZoneInfo(timezone_name))
+    except ZoneInfoNotFoundError:
+        local = value.astimezone(timezone.utc)
+    return local.strftime("%Y-%m-%d %H:%M %Z")
+
+
+def chart_rows(chart: Mapping[str, Any], language: str, include_nakshatra: bool) -> list[dict[str, Any]]:
+    t = TEXT[language]
+    rows: list[dict[str, Any]] = []
+    for item in chart["positions"]:
+        row: dict[str, Any] = {
+            t["body"]: body_label(str(item["code"]), language),
+            t["sign"]: sign_label(str(item["sign"]), language),
+            t["degree"] if include_nakshatra else t["varga_degree"]: format_degree(float(item["degree_in_sign"])),
+            t["house"]: int(item["house"]),
+            t["motion"]: t["retrograde"] if item["retrograde"] else t["direct"],
+        }
+        if include_nakshatra:
+            row[t["nakshatra"]] = item["nakshatra"]
+            row[t["pada"]] = int(item["pada"])
+        rows.append(row)
+    return rows
+
+
+def period_status(period: Mapping[str, Any], language: str) -> str:
+    t = TEXT[language]
+    markers: list[str] = []
+    if period.get("at_birth"):
+        markers.append(f"● {t['at_birth']}")
+    if period.get("current"):
+        markers.append(f"▶ {t['current']}")
+    return " · ".join(markers) if markers else ""
+
+
+def render_chart_svg(chart: Mapping[str, Any], language: str) -> None:
+    svg = render_north_indian_svg(
+        chart,
+        sign_labels=SIGN_ZH if language == "zh-TW" else {},
+        planet_labels=BODY_ABBR_ZH if language == "zh-TW" else {},
+    )
+    html = f"""
+    <style>
+      html, body {{ margin: 0; background: transparent; }}
+      .chart-card {{
+        max-width: 680px;
+        margin: auto;
+        padding: 8px;
+        box-sizing: border-box;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #111827;
+      }}
+    </style>
+    <div class="chart-card">{svg}</div>
+    """
+    components.html(html, height=700, scrolling=False)
+
+
 language = st.sidebar.selectbox("Language / 語言", ["zh-TW", "en"], index=0)
 t = TEXT[language]
+
 st.title(t["title"])
+st.caption(t["subtitle"])
 
 with st.sidebar:
     st.markdown(f"### {t['settings']}")
     st.write("Sidereal · Lahiri")
     st.write("True Node · Whole Sign")
+    st.write("D1 · D9 · D10")
+    st.write("Vimshottari")
     st.caption(t["license"])
 
 birth_date_column, birth_time_column = st.columns([1, 1])
@@ -396,7 +587,7 @@ if is_current_search and search_context.get("alias_used"):
         )
     )
 
-selected_city = None
+selected_city: dict[str, Any] | None = None
 if results:
     index = st.selectbox(
         t["select_city"],
@@ -405,14 +596,16 @@ if results:
         key="selected_city_index",
     )
     selected_city = results[index]
-    c1, c2 = st.columns(2)
-    c1.metric(t["timezone"], selected_city["timezone"])
-    c2.metric(t["coordinates"], f"{selected_city['latitude']:.4f}, {selected_city['longitude']:.4f}")
+    metric_timezone, metric_coordinates = st.columns(2)
+    metric_timezone.metric(t["timezone"], selected_city["timezone"])
+    metric_coordinates.metric(
+        t["coordinates"],
+        f"{selected_city['latitude']:.4f}, {selected_city['longitude']:.4f}",
+    )
 elif is_current_search and not search_context.get("failed"):
     st.info(t["no_results"])
 
-utc_choice = None
-time_resolution = None
+utc_choice: datetime | None = None
 if selected_city and birth_time_value is not None:
     local_naive = datetime.combine(birth_date, birth_time_value)
     time_resolution = resolve_local_time(local_naive, selected_city["timezone"])
@@ -421,7 +614,11 @@ if selected_city and birth_time_value is not None:
         choice_index = st.radio(
             t["choose_offset"],
             options=range(len(time_resolution.choices_utc)),
-            format_func=lambda i: f"{time_resolution.offsets[i]} → {time_resolution.choices_utc[i].strftime('%Y-%m-%d %H:%M UTC')}",
+            format_func=lambda i: (
+                f"{time_resolution.offsets[i]} → "
+                f"{time_resolution.choices_utc[i].strftime('%Y-%m-%d %H:%M UTC')}"
+            ),
+            key=f"ambiguous_{birth_date}_{birth_time_value}_{selected_city['timezone']}",
         )
         utc_choice = time_resolution.choices_utc[choice_index]
     elif time_resolution.status == "valid":
@@ -434,12 +631,20 @@ if selected_city and birth_time_value is not None:
 can_calculate = selected_city is not None and utc_choice is not None
 if st.button(t["calculate"], type="primary", disabled=not can_calculate, use_container_width=True):
     try:
+        assert selected_city is not None
+        assert utc_choice is not None
+        local_naive = datetime.combine(birth_date, birth_time_value)
+        st.session_state.pop("selected_mahadasha_index", None)
         st.session_state["chart"] = calculate_chart(
             utc_choice,
             selected_city["latitude"],
             selected_city["longitude"],
         )
-        st.session_state["chart_city"] = selected_city
+        st.session_state["chart_context"] = {
+            "city": dict(selected_city),
+            "birth_local": local_naive.isoformat(timespec="minutes"),
+            "timezone": selected_city["timezone"],
+        }
     except Exception as exc:
         st.error(f"{t['request_error']}{exc}")
 
@@ -447,37 +652,173 @@ if not selected_city:
     st.caption(t["enter_city"])
 
 chart = st.session_state.get("chart")
+chart_context = st.session_state.get("chart_context", {})
+if chart and "charts" not in chart:
+    st.warning(t["chart_missing"])
+    chart = None
+
 if chart:
     st.divider()
-    st.subheader(t["chart"])
-    svg = render_north_indian_svg(
-        chart,
-        sign_labels=SIGN_ZH if language == "zh-TW" else {},
-        planet_labels=BODY_ABBR_ZH if language == "zh-TW" else {},
-    )
-    components.html(f'<div style="max-width:720px;margin:auto;color:inherit">{svg}</div>', height=730, scrolling=False)
+    context_city = chart_context.get("city", {})
+    context_timezone = str(chart_context.get("timezone", "UTC"))
+    context_place = ", ".join(city_display_parts(context_city, language)) if context_city else ""
 
-    st.subheader(t["positions"])
-    rows = []
-    for item in chart["positions"]:
-        body = BODY_ZH.get(item["code"], item["code"]) if language == "zh-TW" else item["code"]
-        sign = SIGN_ZH.get(item["sign"], item["sign"]) if language == "zh-TW" else item["sign"]
-        rows.append({
-            t["body"]: body,
-            t["sign"]: sign,
-            t["degree"]: format_degree(item["degree_in_sign"]),
-            t["nakshatra"]: item["nakshatra"],
-            t["pada"]: item["pada"],
-            t["house"]: item["house"],
-            t["motion"]: t["retrograde"] if item["retrograde"] else t["direct"],
-        })
-    st.dataframe(rows, use_container_width=True, hide_index=True)
-    st.caption(f"UTC: {chart['utc_datetime']} · JD(UT): {chart['julian_day_ut']:.6f}")
+    with st.expander(t["calculation_context"], expanded=False):
+        st.write(f"**{t['calculated_city']}：** {context_place}")
+        st.write(
+            f"**{t['local_birth_time']}：** {chart_context.get('birth_local', '')} "
+            f"({context_timezone})"
+        )
+        st.write(
+            f"**UTC：** {chart['utc_datetime']} · **JD(UT)：** {chart['julian_day_ut']:.6f}"
+        )
+
+    tab_d1, tab_vargas, tab_dasha, tab_positions, tab_notes = st.tabs(
+        [
+            t["tab_d1"],
+            t["tab_vargas"],
+            t["tab_dasha"],
+            t["tab_positions"],
+            t["tab_notes"],
+        ]
+    )
+
+    with tab_d1:
+        st.subheader(t["d1_chart"])
+        render_chart_svg(chart["charts"]["D1"], language)
+
+    with tab_vargas:
+        division_code = st.selectbox(
+            t["division_select"],
+            options=["D9", "D10"],
+            format_func=lambda code: t["d9_label"] if code == "D9" else t["d10_label"],
+            key="division_code",
+        )
+        if division_code == "D9":
+            st.info(t["d9_description"])
+        else:
+            st.info(t["d10_description"])
+
+        varga_chart = chart["charts"][division_code]
+        st.subheader(t["d9_label"] if division_code == "D9" else t["d10_label"])
+        render_chart_svg(varga_chart, language)
+        st.subheader(t["varga_positions"])
+        st.dataframe(
+            chart_rows(varga_chart, language, include_nakshatra=False),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    with tab_dasha:
+        dasha = chart["dasha"]
+        current_period = dasha.get("current")
+        current_text = t["none"]
+        if current_period:
+            current_text = (
+                f"{body_label(current_period['mahadasha'], language)} / "
+                f"{body_label(current_period['antardasha'], language)}"
+            )
+
+        summary_1, summary_2, summary_3, summary_4 = st.columns(4)
+        summary_1.metric(
+            t["birth_nakshatra"],
+            f"{dasha['birth_nakshatra']} · Pada {dasha['birth_pada']}",
+        )
+        summary_2.metric(t["birth_mahadasha"], body_label(dasha["birth_lord"], language))
+        balance_value = (
+            f"{dasha['birth_balance_years']:.3f} 年"
+            if language == "zh-TW"
+            else f"{dasha['birth_balance_years']:.3f} years"
+        )
+        summary_3.metric(t["balance_at_birth"], balance_value)
+        summary_4.metric(t["current_period"], current_text)
+
+        st.caption(
+            f"{t['balance_ends']}："
+            f"{format_local_datetime(dasha['birth_balance_end_utc'], context_timezone)}"
+        )
+        st.caption(
+            f"{t['current_as_of']}: "
+            f"{format_local_datetime(dasha['current_utc'], context_timezone)}"
+        )
+        st.caption(t["dasha_date_note"].format(timezone=context_timezone))
+        st.warning(t["dasha_convention"])
+
+        display_mahadashas = [
+            period for period in dasha["mahadashas"] if period.get("within_display_window")
+        ]
+        st.subheader(t["mahadasha_table"])
+        mahadasha_rows = [
+            {
+                t["mahadasha"]: body_label(period["lord"], language),
+                t["start"]: format_local_datetime(period["start_utc"], context_timezone),
+                t["end"]: format_local_datetime(period["end_utc"], context_timezone),
+                t["duration_years"]: f"{float(period['duration_years']):.3f}",
+                t["status"]: period_status(period, language),
+            }
+            for period in display_mahadashas
+        ]
+        st.dataframe(mahadasha_rows, use_container_width=True, hide_index=True)
+
+        default_md_index = next(
+            (index for index, period in enumerate(display_mahadashas) if period.get("current")),
+            next(
+                (index for index, period in enumerate(display_mahadashas) if period.get("at_birth")),
+                0,
+            ),
+        )
+        selected_md_index = st.selectbox(
+            t["select_mahadasha"],
+            options=range(len(display_mahadashas)),
+            index=default_md_index,
+            format_func=lambda i: (
+                f"{body_label(display_mahadashas[i]['lord'], language)} · "
+                f"{format_local_datetime(display_mahadashas[i]['start_utc'], context_timezone)} → "
+                f"{format_local_datetime(display_mahadashas[i]['end_utc'], context_timezone)}"
+            ),
+            key="selected_mahadasha_index",
+        )
+        selected_md = display_mahadashas[selected_md_index]
+
+        st.subheader(t["antardasha_table"])
+        antardasha_rows = [
+            {
+                t["mahadasha"]: body_label(selected_md["lord"], language),
+                t["antardasha"]: body_label(period["lord"], language),
+                t["start"]: format_local_datetime(period["start_utc"], context_timezone),
+                t["end"]: format_local_datetime(period["end_utc"], context_timezone),
+                t["duration_years"]: f"{float(period['duration_years']):.3f}",
+                t["status"]: period_status(period, language),
+            }
+            for period in selected_md["antardashas"]
+        ]
+        st.dataframe(antardasha_rows, use_container_width=True, hide_index=True)
+
+    with tab_positions:
+        st.subheader(t["positions"])
+        st.dataframe(
+            chart_rows(chart["charts"]["D1"], language, include_nakshatra=True),
+            use_container_width=True,
+            hide_index=True,
+        )
+        st.caption(f"UTC: {chart['utc_datetime']} · JD(UT): {chart['julian_day_ut']:.6f}")
+
+    with tab_notes:
+        st.subheader(t["settings"])
+        st.write(t["settings_text"])
+        st.write(t["varga_method_note"])
+        st.write(t["dasha_method_note"])
+        st.write(t["dasha_convention"])
+
+        st.subheader(t["sources"])
+        st.write(t["sources_text"])
+
+        st.subheader(t["privacy"])
+        st.write(t["privacy_text"])
+
+        st.subheader(t["disclaimer"])
+        st.write(t["disclaimer_text"])
+        st.caption(t["license"])
 
 st.divider()
-with st.expander(t["sources"], expanded=False):
-    st.write(t["sources_text"])
-with st.expander(t["privacy"], expanded=False):
-    st.write(t["privacy_text"])
-with st.expander(t["disclaimer"], expanded=True):
-    st.write(t["disclaimer_text"])
+st.caption(t["disclaimer_text"])

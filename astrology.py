@@ -1,27 +1,59 @@
 """Core Vedic astrology calculations using Swiss Ephemeris.
 
-Internal identifiers are intentionally English and stable. UI translation belongs in app.py.
+Internal identifiers are intentionally English and stable. User-interface translation
+belongs in app.py.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
-from datetime import datetime, timezone
-from typing import Any, Literal
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta, timezone
+from typing import Any, Literal, Mapping, Sequence
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import swisseph as swe
 
 ZODIAC_SIGNS = (
-    "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-    "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
+    "Aries",
+    "Taurus",
+    "Gemini",
+    "Cancer",
+    "Leo",
+    "Virgo",
+    "Libra",
+    "Scorpio",
+    "Sagittarius",
+    "Capricorn",
+    "Aquarius",
+    "Pisces",
 )
 
 NAKSHATRAS = (
-    "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra",
-    "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni",
-    "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha",
-    "Jyeshtha", "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana",
-    "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada",
+    "Ashwini",
+    "Bharani",
+    "Krittika",
+    "Rohini",
+    "Mrigashira",
+    "Ardra",
+    "Punarvasu",
+    "Pushya",
+    "Ashlesha",
+    "Magha",
+    "Purva Phalguni",
+    "Uttara Phalguni",
+    "Hasta",
+    "Chitra",
+    "Swati",
+    "Vishakha",
+    "Anuradha",
+    "Jyeshtha",
+    "Mula",
+    "Purva Ashadha",
+    "Uttara Ashadha",
+    "Shravana",
+    "Dhanishta",
+    "Shatabhisha",
+    "Purva Bhadrapada",
+    "Uttara Bhadrapada",
     "Revati",
 )
 
@@ -35,6 +67,42 @@ PLANET_IDS = {
     "Saturn": swe.SATURN,
     "Rahu": swe.TRUE_NODE,
 }
+
+VARGA_NAMES = {
+    1: "Rashi",
+    9: "Navamsha",
+    10: "Dashamsha",
+}
+
+# Vimshottari order begins with the ruler of Ashwini. The nine durations total 120 years.
+VIMSHOTTARI_ORDER = (
+    "Ketu",
+    "Venus",
+    "Sun",
+    "Moon",
+    "Mars",
+    "Rahu",
+    "Jupiter",
+    "Saturn",
+    "Mercury",
+)
+VIMSHOTTARI_YEARS = {
+    "Ketu": 7.0,
+    "Venus": 20.0,
+    "Sun": 6.0,
+    "Moon": 10.0,
+    "Mars": 7.0,
+    "Rahu": 18.0,
+    "Jupiter": 16.0,
+    "Saturn": 19.0,
+    "Mercury": 17.0,
+}
+
+# A classical text gives the dasha spans in years but does not uniquely define a modern
+# civil-day conversion. This project uses the mean Gregorian year and states the choice
+# in the interface and README so that date differences between software are auditable.
+DASHA_YEAR_DAYS = 365.2425
+VIMSHOTTARI_TOTAL_YEARS = 120.0
 
 TimeStatus = Literal["valid", "ambiguous", "nonexistent", "invalid_timezone"]
 
@@ -100,7 +168,8 @@ def resolve_local_time(local_naive: datetime, timezone_name: str) -> TimeResolut
     if len(valid) == 2:
         valid.sort(key=lambda item: item[0])
         return TimeResolution(
-            "ambiguous", timezone_name,
+            "ambiguous",
+            timezone_name,
             tuple(item[0] for item in valid),
             tuple(item[1] for item in valid),
         )
@@ -113,7 +182,7 @@ def _normalize_longitude(value: float) -> float:
 
 def _position_metadata(longitude: float) -> tuple[int, str, float, int, str, int]:
     longitude = _normalize_longitude(longitude)
-    sign_index = int(longitude // 30.0)
+    sign_index = min(11, int(longitude // 30.0))
     degree_in_sign = longitude - sign_index * 30.0
 
     nak_span = 360.0 / 27.0
@@ -146,21 +215,121 @@ def _julian_day_utc(utc_dt: datetime) -> float:
     return swe.julday(utc_dt.year, utc_dt.month, utc_dt.day, hour, swe.GREG_CAL)
 
 
-def calculate_chart(utc_dt: datetime, latitude: float, longitude: float) -> dict[str, Any]:
-    """Calculate a sidereal Lahiri D1 chart with true lunar node and whole-sign houses."""
-    if utc_dt.tzinfo is None:
-        raise ValueError("utc_dt must be timezone-aware")
-    if not -90.0 <= latitude <= 90.0:
-        raise ValueError("latitude must be between -90 and 90")
-    if not -180.0 <= longitude <= 180.0:
-        raise ValueError("longitude must be between -180 and 180")
+def _iso_utc(value: datetime) -> str:
+    return value.astimezone(timezone.utc).isoformat()
 
-    jd_ut = _julian_day_utc(utc_dt)
+
+def varga_longitude(longitude: float, division: int) -> float:
+    """Transform a sidereal longitude into a supported Parashari varga longitude.
+
+    Supported divisions:
+    - D1 Rashi: unchanged.
+    - D9 Navamsha: movable signs begin from themselves, fixed signs from the ninth,
+      and dual signs from the fifth.
+    - D10 Dashamsha: odd signs begin from themselves and even signs from the ninth.
+
+    The returned longitude encodes both the resulting varga sign and the proportional
+    degree within that sign.
+    """
+    longitude = _normalize_longitude(longitude)
+    if division == 1:
+        return longitude
+
+    sign_index = min(11, int(longitude // 30.0))
+    degree_in_sign = longitude - sign_index * 30.0
+
+    if division == 9:
+        part_size = 30.0 / 9.0
+        part_index = min(8, int(degree_in_sign // part_size))
+        within_part = degree_in_sign - part_index * part_size
+
+        # 0 = movable, 1 = fixed, 2 = dual within each group of three signs.
+        modality = sign_index % 3
+        if modality == 0:  # movable
+            start_sign = sign_index
+        elif modality == 1:  # fixed: ninth sign from the natal sign
+            start_sign = (sign_index + 8) % 12
+        else:  # dual: fifth sign from the natal sign
+            start_sign = (sign_index + 4) % 12
+
+        target_sign = (start_sign + part_index) % 12
+        target_degree = within_part * 9.0
+        return _normalize_longitude(target_sign * 30.0 + target_degree)
+
+    if division == 10:
+        part_size = 3.0
+        part_index = min(9, int(degree_in_sign // part_size))
+        within_part = degree_in_sign - part_index * part_size
+
+        # Zodiac sign numbers 1, 3, 5... are odd. With zero-based indexes, these
+        # are indexes 0, 2, 4....
+        if sign_index % 2 == 0:
+            start_sign = sign_index
+        else:
+            start_sign = (sign_index + 8) % 12  # ninth sign from the natal sign
+
+        target_sign = (start_sign + part_index) % 12
+        target_degree = within_part * 10.0
+        return _normalize_longitude(target_sign * 30.0 + target_degree)
+
+    raise ValueError(f"Unsupported varga division: D{division}")
+
+
+def calculate_varga_chart(
+    base_positions: Sequence[Mapping[str, Any]],
+    division: int,
+) -> dict[str, Any]:
+    """Create a whole-sign divisional chart from D1 sidereal longitudes."""
+    if division not in VARGA_NAMES:
+        raise ValueError(f"Unsupported varga division: D{division}")
+
+    transformed: list[dict[str, Any]] = []
+    for base in base_positions:
+        lon = varga_longitude(float(base["longitude"]), division)
+        meta = _position_metadata(lon)
+        transformed.append(
+            {
+                "code": str(base["code"]),
+                "longitude": lon,
+                "sign_index": meta[0],
+                "sign": meta[1],
+                "degree_in_sign": meta[2],
+                "nakshatra_index": meta[3],
+                "nakshatra": meta[4],
+                "pada": meta[5],
+                "retrograde": bool(base.get("retrograde", False)),
+            }
+        )
+
+    ascendant = next((item for item in transformed if item["code"] == "Ascendant"), None)
+    if ascendant is None:
+        raise ValueError("base_positions must include Ascendant")
+    asc_sign_index = int(ascendant["sign_index"])
+
+    positions: list[dict[str, Any]] = []
+    for item in transformed:
+        item_with_house = dict(item)
+        item_with_house["house"] = _house_from_sign(int(item["sign_index"]), asc_sign_index)
+        if item_with_house["code"] == "Ascendant":
+            item_with_house["house"] = 1
+        positions.append(item_with_house)
+
+    return {
+        "chart_code": f"D{division}",
+        "division": division,
+        "name": VARGA_NAMES[division],
+        "house_system": "Whole Sign",
+        "ascendant_sign_index": asc_sign_index,
+        "positions": positions,
+    }
+
+
+def _calculate_d1(jd_ut: float, latitude: float, longitude: float) -> dict[str, Any]:
     swe.set_sid_mode(swe.SIDM_LAHIRI, 0.0, 0.0)
     flags = swe.FLG_SWIEPH | swe.FLG_SPEED | swe.FLG_SIDEREAL
 
-    # Swiss Ephemeris house system W = whole sign. ascmc[0] is the sidereal Ascendant
-    # because FLG_SIDEREAL is supplied.
+    # Swiss Ephemeris house system W = whole sign. ascmc[0] is the sidereal
+    # Ascendant because FLG_SIDEREAL is supplied.
     _cusps, ascmc = swe.houses_ex(jd_ut, latitude, longitude, b"W", swe.FLG_SIDEREAL)
     asc_lon = _normalize_longitude(float(ascmc[0]))
     asc_meta = _position_metadata(asc_lon)
@@ -183,7 +352,7 @@ def calculate_chart(utc_dt: datetime, latitude: float, longitude: float) -> dict
 
     rahu_longitude: float | None = None
     for code, planet_id in PLANET_IDS.items():
-        values, return_flags = swe.calc_ut(jd_ut, planet_id, flags)
+        values, _return_flags = swe.calc_ut(jd_ut, planet_id, flags)
         lon = _normalize_longitude(float(values[0]))
         speed = float(values[3])
         if code == "Rahu":
@@ -225,13 +394,198 @@ def calculate_chart(utc_dt: datetime, latitude: float, longitude: float) -> dict
     )
 
     return {
-        "utc_datetime": utc_dt.astimezone(timezone.utc).isoformat(),
+        "chart_code": "D1",
+        "division": 1,
+        "name": "Rashi",
+        "house_system": "Whole Sign",
+        "ascendant_sign_index": asc_sign_index,
+        "positions": [position.to_dict() for position in positions],
+    }
+
+
+def _period_contains(start: datetime, end: datetime, moment: datetime | None) -> bool:
+    return moment is not None and start <= moment < end
+
+
+def calculate_vimshottari(
+    moon_longitude: float,
+    birth_utc: datetime,
+    current_utc: datetime | None = None,
+) -> dict[str, Any]:
+    """Calculate Vimshottari Mahadasha and Antardasha intervals.
+
+    The Moon's sidereal nakshatra determines the starting lord. The expired fraction
+    of that nakshatra determines the elapsed fraction of the starting Mahadasha.
+    Antardasha durations are Mahadasha years × Antardasha-lord years / 120.
+    """
+    if birth_utc.tzinfo is None:
+        raise ValueError("birth_utc must be timezone-aware")
+    birth_utc = birth_utc.astimezone(timezone.utc)
+
+    if current_utc is None:
+        current_utc = datetime.now(timezone.utc)
+    elif current_utc.tzinfo is None:
+        raise ValueError("current_utc must be timezone-aware")
+    else:
+        current_utc = current_utc.astimezone(timezone.utc)
+
+    moon_longitude = _normalize_longitude(moon_longitude)
+    nak_span = 360.0 / 27.0
+    nak_index = min(26, int(moon_longitude // nak_span))
+    within_nak = moon_longitude - nak_index * nak_span
+    fraction_elapsed = within_nak / nak_span
+
+    birth_lord = VIMSHOTTARI_ORDER[nak_index % len(VIMSHOTTARI_ORDER)]
+    birth_lord_index = VIMSHOTTARI_ORDER.index(birth_lord)
+    birth_md_years = VIMSHOTTARI_YEARS[birth_lord]
+    elapsed_days = fraction_elapsed * birth_md_years * DASHA_YEAR_DAYS
+    cycle_start = birth_utc - timedelta(days=elapsed_days)
+
+    display_end = birth_utc + timedelta(days=VIMSHOTTARI_TOTAL_YEARS * DASHA_YEAR_DAYS)
+    current_for_highlight = current_utc if current_utc >= birth_utc else None
+    generation_target = max(display_end, current_for_highlight or display_end)
+
+    mahadashas: list[dict[str, Any]] = []
+    current_summary: dict[str, Any] | None = None
+    birth_md_end: datetime | None = None
+    md_start = cycle_start
+    sequence_offset = 0
+
+    # The first period starts before birth. Ten periods normally cover the full
+    # 120-year window measured forward from birth. A higher cap also supports old
+    # historical dates while keeping accidental infinite loops impossible.
+    while sequence_offset < 40:
+        md_lord = VIMSHOTTARI_ORDER[(birth_lord_index + sequence_offset) % 9]
+        md_years = VIMSHOTTARI_YEARS[md_lord]
+        md_duration = timedelta(days=md_years * DASHA_YEAR_DAYS)
+        md_end = md_start + md_duration
+
+        at_birth = _period_contains(md_start, md_end, birth_utc)
+        is_current = _period_contains(md_start, md_end, current_for_highlight)
+        if at_birth:
+            birth_md_end = md_end
+
+        antardashas: list[dict[str, Any]] = []
+        cumulative_fraction = 0.0
+        for ad_offset in range(9):
+            ad_lord = VIMSHOTTARI_ORDER[
+                (VIMSHOTTARI_ORDER.index(md_lord) + ad_offset) % 9
+            ]
+            ad_years = md_years * VIMSHOTTARI_YEARS[ad_lord] / VIMSHOTTARI_TOTAL_YEARS
+            ad_start = md_start + md_duration * cumulative_fraction
+            cumulative_fraction += VIMSHOTTARI_YEARS[ad_lord] / VIMSHOTTARI_TOTAL_YEARS
+            ad_end = md_end if ad_offset == 8 else md_start + md_duration * cumulative_fraction
+
+            ad_at_birth = _period_contains(ad_start, ad_end, birth_utc)
+            ad_is_current = _period_contains(ad_start, ad_end, current_for_highlight)
+            antardashas.append(
+                {
+                    "lord": ad_lord,
+                    "start_utc": _iso_utc(ad_start),
+                    "end_utc": _iso_utc(ad_end),
+                    "duration_years": ad_years,
+                    "at_birth": ad_at_birth,
+                    "current": ad_is_current,
+                }
+            )
+            if ad_is_current:
+                current_summary = {
+                    "mahadasha": md_lord,
+                    "antardasha": ad_lord,
+                    "mahadasha_start_utc": _iso_utc(md_start),
+                    "mahadasha_end_utc": _iso_utc(md_end),
+                    "antardasha_start_utc": _iso_utc(ad_start),
+                    "antardasha_end_utc": _iso_utc(ad_end),
+                }
+
+        mahadashas.append(
+            {
+                "lord": md_lord,
+                "start_utc": _iso_utc(md_start),
+                "end_utc": _iso_utc(md_end),
+                "duration_years": md_years,
+                "at_birth": at_birth,
+                "current": is_current,
+                "within_display_window": md_end > birth_utc and md_start < display_end,
+                "antardashas": antardashas,
+            }
+        )
+
+        if md_end >= generation_target and (current_for_highlight is None or md_end > current_for_highlight):
+            break
+        md_start = md_end
+        sequence_offset += 1
+
+    if birth_md_end is None:
+        raise RuntimeError("Unable to identify the Mahadasha operating at birth")
+
+    balance_days = (birth_md_end - birth_utc).total_seconds() / 86400.0
+    balance_years = balance_days / DASHA_YEAR_DAYS
+    moon_meta = _position_metadata(moon_longitude)
+
+    return {
+        "system": "Vimshottari",
+        "cycle_years": VIMSHOTTARI_TOTAL_YEARS,
+        "year_definition": "Mean Gregorian year",
+        "year_days": DASHA_YEAR_DAYS,
+        "birth_nakshatra_index": moon_meta[3],
+        "birth_nakshatra": moon_meta[4],
+        "birth_pada": moon_meta[5],
+        "birth_lord": birth_lord,
+        "nakshatra_fraction_elapsed": fraction_elapsed,
+        "birth_balance_years": balance_years,
+        "birth_balance_end_utc": _iso_utc(birth_md_end),
+        "display_start_utc": _iso_utc(birth_utc),
+        "display_end_utc": _iso_utc(display_end),
+        "current_utc": _iso_utc(current_utc),
+        "current": current_summary,
+        "mahadashas": mahadashas,
+    }
+
+
+def calculate_chart(
+    utc_dt: datetime,
+    latitude: float,
+    longitude: float,
+    current_utc: datetime | None = None,
+) -> dict[str, Any]:
+    """Calculate Lahiri D1, D9, D10 charts and Vimshottari dasha data."""
+    if utc_dt.tzinfo is None:
+        raise ValueError("utc_dt must be timezone-aware")
+    if not -90.0 <= latitude <= 90.0:
+        raise ValueError("latitude must be between -90 and 90")
+    if not -180.0 <= longitude <= 180.0:
+        raise ValueError("longitude must be between -180 and 180")
+
+    utc_dt = utc_dt.astimezone(timezone.utc)
+    jd_ut = _julian_day_utc(utc_dt)
+    d1 = _calculate_d1(jd_ut, latitude, longitude)
+    d9 = calculate_varga_chart(d1["positions"], 9)
+    d10 = calculate_varga_chart(d1["positions"], 10)
+
+    moon = next((item for item in d1["positions"] if item["code"] == "Moon"), None)
+    if moon is None:
+        raise RuntimeError("Moon calculation failed")
+    dasha = calculate_vimshottari(float(moon["longitude"]), utc_dt, current_utc=current_utc)
+
+    return {
+        "utc_datetime": _iso_utc(utc_dt),
         "julian_day_ut": jd_ut,
         "latitude": latitude,
         "longitude": longitude,
         "ayanamsha": "Lahiri",
         "node_type": "True Node",
         "house_system": "Whole Sign",
-        "ascendant_sign_index": asc_sign_index,
-        "positions": [position.to_dict() for position in positions],
+        "varga_method": "Parashari",
+        "dasha_system": "Vimshottari",
+        "dasha_year_days": DASHA_YEAR_DAYS,
+        "charts": {
+            "D1": d1,
+            "D9": d9,
+            "D10": d10,
+        },
+        "dasha": dasha,
+        # Backward-compatible D1 aliases for older app versions or external callers.
+        "ascendant_sign_index": d1["ascendant_sign_index"],
+        "positions": d1["positions"],
     }
