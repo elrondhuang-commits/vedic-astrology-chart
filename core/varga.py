@@ -84,6 +84,51 @@ def varga_longitude(longitude: float, division: int) -> float:
         start = 4 if sign_index % 2 == 0 else 3
         return _equal_division(sign_index, degree, 24, start)
 
+    if division == 27:
+        # Fire signs start from Aries, earth signs from Cancer, air signs
+        # from Libra, and water signs from Capricorn. Parts advance zodiacally.
+        start = (sign_index % 4) * 3
+        return _equal_division(sign_index, degree, 27, start)
+
+    if division == 30:
+        # Classical Parashari Trimshamsha uses five unequal spans. Odd signs:
+        # Mars 5, Saturn 5, Jupiter 8, Mercury 7, Venus 5 degrees, mapped to
+        # Aries, Aquarius, Sagittarius, Gemini, Libra. Even signs reverse the
+        # planetary order and map to Taurus, Virgo, Pisces, Capricorn, Scorpio.
+        if sign_index % 2 == 0:
+            spans = (5.0, 5.0, 8.0, 7.0, 5.0)
+            targets = (0, 10, 8, 2, 6)
+        else:
+            spans = (5.0, 7.0, 8.0, 5.0, 5.0)
+            targets = (1, 5, 11, 9, 7)
+
+        lower = 0.0
+        for span, target in zip(spans, targets):
+            upper = lower + span
+            if degree < upper or upper >= 30.0:
+                within = degree - lower
+                return normalize_longitude(target * 30.0 + within * (30.0 / span))
+            lower = upper
+        raise RuntimeError("Trimshamsha segment resolution failed")
+
+    if division == 40:
+        # Odd signs start from Aries; even signs start from Libra.
+        start = 0 if sign_index % 2 == 0 else 6
+        return _equal_division(sign_index, degree, 40, start)
+
+    if division == 45:
+        # Movable signs start from Aries, fixed signs from Leo, and dual signs
+        # from Sagittarius.
+        start_by_modality = {0: 0, 1: 4, 2: 8}
+        return _equal_division(sign_index, degree, 45, start_by_modality[sign_index % 3])
+
+    if division == 60:
+        # Standard Parashari chart-sign mapping is the 60-fold harmonic: each
+        # half-degree part starts from Aries and advances zodiacally. Deity-name
+        # ordering (odd forward, even reverse) is separate metadata and is not
+        # yet displayed by this application.
+        return _equal_division(sign_index, degree, 60, 0)
+
     raise ValueError(f"Unsupported varga division: D{division}")
 
 

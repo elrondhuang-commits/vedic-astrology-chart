@@ -1,8 +1,8 @@
 # 吠陀星盤 — Streamlit
 
-**Version 0.3.0 — D16, D20, and D24**
+**Version 0.4.0 — Complete Shodashavarga**
 
-一個以透明、正確、可驗證及遵循古典 Jyotisha 為核心的開源吠陀占星平台。此版本在模組化核心與 Varga Registry 上新增 D16、D20、D24，並補上分界測試、版本紀錄與計算文件。
+一個以透明、正確、可驗證及遵循古典 Jyotisha 為核心的開源吠陀占星平台。此版本完成經典 Shodashavarga 16 分盤，新增 D27、D30、D40、D45、D60，並加入高階分盤出生時間精度警告與完整邊界測試。
 
 > 現有 GitHub 專案升級時，請上傳所有檔案與 `core/`、`charts/`、`tests/`、`docs/` 四個資料夾，並維持其資料夾結構。
 
@@ -36,6 +36,11 @@ A simple, database-free Vedic astrology website designed for direct deployment t
 - D16 Shodashamsha divisional chart
 - D20 Vimshamsha divisional chart
 - D24 Chaturvimshamsha divisional chart
+- D27 Saptavimshamsha divisional chart
+- D30 Trimshamsha divisional chart
+- D40 Khavedamsha divisional chart
+- D45 Akshavedamsha divisional chart
+- D60 Shashtiamsha divisional chart
 - Vimshottari Mahadasha and Antardasha timelines
 - Birth Mahadasha balance and current Maha/Antardasha marker
 - No database, no AI API, and no intentional storage of birth data
@@ -221,3 +226,29 @@ Swiss Ephemeris is dual-licensed. This AGPL project is intended to follow the op
 - Added exact segment-boundary tests for 1°52′30″, 1°30′, and 1°15′ divisions.
 - Added `CHANGELOG.md` and updated architecture, algorithm, roadmap, and validation documents.
 - Kept the existing D1, Moon chart, Vimshottari, Taiwan city search, privacy behavior, and deployment requirements unchanged.
+
+### D27 Saptavimshamsha
+
+Each sign is divided into 27 equal parts. Fire, earth, air, and water signs start from Aries, Cancer, Libra, and Capricorn respectively.
+
+### D30 Trimshamsha
+
+The classical unequal Parashari five-span mapping is used. Odd and even signs follow their respective Mars/Saturn/Jupiter/Mercury/Venus sequences and target signs.
+
+### D40 Khavedamsha
+
+Each sign is divided into 40 equal 45′ parts. Odd signs begin from Aries and even signs from Libra.
+
+### D45 Akshavedamsha
+
+Each sign is divided into 45 equal 40′ parts. Movable, fixed, and dual signs begin from Aries, Leo, and Sagittarius respectively.
+
+### D60 Shashtiamsha
+
+Each sign is divided into 60 equal 0°30′ parts. The app displays the D60 signs and houses and warns that a small birth-time error can alter the D60 Ascendant. The sixty deity names are not yet displayed.
+
+## 0.4.0 changes
+
+- Completed the classical Shodashavarga set with D27, D30, D40, D45, and D60.
+- Added localized birth-time precision warnings for D40, D45, and D60.
+- Expanded boundary and full-chart regression tests.

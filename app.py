@@ -45,7 +45,7 @@ TEXT = {
     "zh-TW": {
         "page_title": "吠陀占星本命盤",
         "title": "吠陀占星本命盤",
-        "subtitle": "D1 本命盤、月亮盤、D2／D3／D4／D7／D9／D10／D12／D16／D20／D24 分盤與 Vimshottari 大運",
+        "subtitle": "D1 本命盤、月亮盤、完整 16 分盤與 Vimshottari 大運",
         "language": "語言",
         "birth_date": "出生日期",
         "birth_time": "出生時間",
@@ -130,8 +130,8 @@ TEXT = {
         "local_birth_time": "出生地當地時間",
         "calculated_city": "出生地",
         "settings": "計算設定",
-        "settings_text": "恆星黃道 Lahiri ayanamsha；True Node；Whole Sign houses；月亮盤；Parashari D2/D3/D4/D7/D9/D10/D12/D16/D20/D24；Vimshottari 120 年週期。",
-        "varga_method_note": "月亮盤：以月亮星座作第一宮，D1 黃經不變。D2：奇數星座前半為太陽 Hora（獅子）、後半為月亮 Hora（巨蟹）；偶數星座相反。D3：每 10° 一段，依序落入本星座、第五與第九星座。D4：每 7°30′ 一段，依序落入本星座、第四、第七與第十星座。D7：奇數星座從本星座起，偶數星座從第七星座起。D9：活動星座從本星座起、固定星座從第九星座起、雙體星座從第五星座起。D10：奇數星座從本星座起，偶數星座從第九星座起。D12：每 2°30′ 一段，從本星座開始依黃道順序排列。D16：活動星座從牡羊起、固定星座從獅子起、雙體星座從射手起。D20：活動星座從牡羊起、固定星座從射手起、雙體星座從獅子起。D24：奇數星座從獅子起、偶數星座從巨蟹起，均依黃道順序排列。",
+        "settings_text": "恆星黃道 Lahiri ayanamsha；True Node；Whole Sign houses；月亮盤；完整 Parashari Shodashavarga 16 分盤；Vimshottari 120 年週期。",
+        "varga_method_note": "月亮盤：以月亮星座作第一宮，D1 黃經不變。D2：奇數星座前半為太陽 Hora（獅子）、後半為月亮 Hora（巨蟹）；偶數星座相反。D3：每 10° 一段，依序落入本星座、第五與第九星座。D4：每 7°30′ 一段，依序落入本星座、第四、第七與第十星座。D7：奇數星座從本星座起，偶數星座從第七星座起。D9：活動星座從本星座起、固定星座從第九星座起、雙體星座從第五星座起。D10：奇數星座從本星座起，偶數星座從第九星座起。D12：每 2°30′ 一段，從本星座開始依黃道順序排列。D16：活動星座從牡羊起、固定星座從獅子起、雙體星座從射手起。D20：活動星座從牡羊起、固定星座從射手起、雙體星座從獅子起。D24：奇數星座從獅子起、偶數星座從巨蟹起。D27：火、土、風、水象星座分別從牡羊、巨蟹、天秤、摩羯起。D30：採 Parashari 五個不等長區段。D40：奇數星座從牡羊起、偶數星座從天秤起。D45：活動、固定、雙體星座分別從牡羊、獅子、射手起。D60：每 0°30′ 一段，從牡羊起依黃道排列。",
         "dasha_method_note": "起始大運依出生月亮所在 Nakshatra 的守護星決定；出生時剩餘比例依月亮尚未走完的星宿比例計算。次運長度＝大運年數 × 次運守護星年數 ÷ 120。",
         "privacy": "隱私",
         "privacy_text": "本網站不使用資料庫，不會主動儲存你輸入的出生資料。Streamlit 與網路基礎設施仍可能產生一般技術日誌。",
@@ -146,7 +146,7 @@ TEXT = {
     "en": {
         "page_title": "Vedic Natal Chart",
         "title": "Vedic Natal Chart",
-        "subtitle": "D1 Rashi, Moon chart, D2/D3/D4/D7/D9/D10/D12/D16/D20/D24 vargas, and Vimshottari dasha",
+        "subtitle": "D1 Rashi, Moon chart, the complete 16-chart Shodashavarga set, and Vimshottari dasha",
         "language": "Language",
         "birth_date": "Birth date",
         "birth_time": "Birth time",
@@ -231,8 +231,8 @@ TEXT = {
         "local_birth_time": "Local birth time",
         "calculated_city": "Birth place",
         "settings": "Calculation settings",
-        "settings_text": "Sidereal Lahiri ayanamsha; True Node; Whole Sign houses; Moon chart; Parashari D2/D3/D4/D7/D9/D10/D12/D16/D20/D24; 120-year Vimshottari cycle.",
-        "varga_method_note": "Moon chart: the Moon sign becomes house 1 while D1 longitudes remain unchanged. D2: in odd signs the first half is Sun Hora (Leo) and the second half Moon Hora (Cancer), reversed in even signs. D3: each 10-degree decan maps to the natal sign, fifth, and ninth. D4 maps four 7.5-degree quarters to the natal, fourth, seventh, and tenth signs. D7 begins from the natal sign for odd signs and the seventh for even signs. D9 and D10 use the stated Parashari mappings. D12 proceeds zodiacally from the natal sign in 2.5-degree parts. D16 starts from Aries for movable signs, Leo for fixed signs, and Sagittarius for dual signs. D20 starts from Aries for movable signs, Sagittarius for fixed signs, and Leo for dual signs. D24 starts from Leo for odd signs and Cancer for even signs, proceeding zodiacally.",
+        "settings_text": "Sidereal Lahiri ayanamsha; True Node; Whole Sign houses; Moon chart; the complete Parashari Shodashavarga set; 120-year Vimshottari cycle.",
+        "varga_method_note": "Moon chart: the Moon sign becomes house 1 while D1 longitudes remain unchanged. D2: in odd signs the first half is Sun Hora (Leo) and the second half Moon Hora (Cancer), reversed in even signs. D3: each 10-degree decan maps to the natal sign, fifth, and ninth. D4 maps four 7.5-degree quarters to the natal, fourth, seventh, and tenth signs. D7 begins from the natal sign for odd signs and the seventh for even signs. D9 and D10 use the stated Parashari mappings. D12 proceeds zodiacally from the natal sign in 2.5-degree parts. D16 starts from Aries for movable signs, Leo for fixed signs, and Sagittarius for dual signs. D20 starts from Aries for movable signs, Sagittarius for fixed signs, and Leo for dual signs. D24 starts from Leo for odd signs and Cancer for even signs. D27 starts from Aries, Cancer, Libra, or Capricorn according to the source sign element. D30 uses the classical five unequal spans. D40 starts from Aries for odd signs and Libra for even signs. D45 starts from Aries, Leo, or Sagittarius by modality. D60 uses sixty half-degree parts advancing zodiacally from Aries.",
         "dasha_method_note": "The birth Moon's Nakshatra ruler starts the Mahadasha. The balance at birth follows the untraversed fraction of that Nakshatra. Antardasha length = Mahadasha years × Antardasha-lord years ÷ 120.",
         "privacy": "Privacy",
         "privacy_text": "This app uses no database and does not intentionally store birth data you enter. Streamlit and network infrastructure may still produce ordinary technical logs.",
@@ -845,6 +845,9 @@ if chart:
         )
         selected_varga = get_varga_info(division_code)
         st.info(selected_varga.description(language))
+        precision_warning = selected_varga.warning(language)
+        if precision_warning:
+            st.warning(precision_warning)
 
         varga_chart = chart["charts"][division_code]
         st.subheader(selected_varga.label(language))

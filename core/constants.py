@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import swisseph as swe
 
-PROJECT_VERSION = "0.3.0"
+PROJECT_VERSION = "0.4.0"
 
 ZODIAC_SIGNS = (
     "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
@@ -41,6 +41,11 @@ VARGA_NAMES = {
     16: "Shodashamsha",
     20: "Vimshamsha",
     24: "Chaturvimshamsha",
+    27: "Saptavimshamsha",
+    30: "Trimshamsha",
+    40: "Khavedamsha",
+    45: "Akshavedamsha",
+    60: "Shashtiamsha",
 }
 
 VIMSHOTTARI_ORDER = (

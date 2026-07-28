@@ -18,12 +18,18 @@ class VargaInfo:
     labels: Mapping[str, str]
     descriptions: Mapping[str, str]
     reference: str
+    warnings: Mapping[str, str] | None = None
 
     def label(self, language: str) -> str:
         return self.labels.get(language, self.labels["en"])
 
     def description(self, language: str) -> str:
         return self.descriptions.get(language, self.descriptions["en"])
+
+    def warning(self, language: str) -> str | None:
+        if not self.warnings:
+            return None
+        return self.warnings.get(language, self.warnings.get("en"))
 
 
 VARGA_REGISTRY: dict[str, VargaInfo] = {
@@ -138,6 +144,73 @@ VARGA_REGISTRY: dict[str, VargaInfo] = {
         reference="Brihat Parashara Hora Shastra, chapter on the sixteen divisions of a sign",
     ),
 
+    "D27": VargaInfo(
+        code="D27",
+        division=27,
+        sanskrit_name="Saptavimshamsha",
+        labels={"zh-TW": "D27 二十七分盤（Saptavimshamsha）", "en": "D27 Saptavimshamsha"},
+        descriptions={
+            "zh-TW": "D27 Saptavimshamsha（亦稱 Bhamsha）常用於先天強弱、耐力、恢復力與在壓力下維持功能的能力。",
+            "en": "D27 Saptavimshamsha, also called Bhamsha, is commonly consulted for inherent strengths, stamina, resilience, and the capacity to function under pressure.",
+        },
+        reference="Brihat Parashara Hora Shastra, chapter on the sixteen divisions of a sign",
+    ),
+    "D30": VargaInfo(
+        code="D30",
+        division=30,
+        sanskrit_name="Trimshamsha",
+        labels={"zh-TW": "D30 三十分盤（Trimshamsha）", "en": "D30 Trimshamsha"},
+        descriptions={
+            "zh-TW": "D30 Trimshamsha 採五個不等長區段，常用於困難、摩擦、弱點、疾病傾向與逆境模式的輔助判讀。",
+            "en": "D30 Trimshamsha uses five unequal spans and is commonly consulted for adversity, friction, vulnerabilities, illness tendencies, and patterns of difficulty.",
+        },
+        reference="Brihat Parashara Hora Shastra, classical unequal Trimshamsha rule",
+    ),
+    "D40": VargaInfo(
+        code="D40",
+        division=40,
+        sanskrit_name="Khavedamsha",
+        labels={"zh-TW": "D40 四十分盤（Khavedamsha）", "en": "D40 Khavedamsha"},
+        descriptions={
+            "zh-TW": "D40 Khavedamsha 常用於母系傳承、細微福德、吉凶積累與家族背景的輔助判讀。",
+            "en": "D40 Khavedamsha is commonly consulted for maternal lineage, subtle merit, accumulated auspicious or inauspicious influences, and family background.",
+        },
+        reference="Brihat Parashara Hora Shastra, chapter on the sixteen divisions of a sign",
+        warnings={
+            "zh-TW": "D40 每一分段只有 45 角分，對出生時間相當敏感；若出生時間未經確認，請將結果視為暫定。",
+            "en": "Each D40 segment is only 45 arc-minutes. Treat the result as provisional when the birth time is not well verified.",
+        },
+    ),
+    "D45": VargaInfo(
+        code="D45",
+        division=45,
+        sanskrit_name="Akshavedamsha",
+        labels={"zh-TW": "D45 四十五分盤（Akshavedamsha）", "en": "D45 Akshavedamsha"},
+        descriptions={
+            "zh-TW": "D45 Akshavedamsha 常用於父系傳承、性格根基、價值取向與細微內在傾向的輔助判讀。",
+            "en": "D45 Akshavedamsha is commonly consulted for paternal lineage, character foundations, values, and subtle inner tendencies.",
+        },
+        reference="Brihat Parashara Hora Shastra, chapter on the sixteen divisions of a sign",
+        warnings={
+            "zh-TW": "D45 每一分段只有 40 角分，對出生時間非常敏感；請優先使用可靠且精確的出生時間。",
+            "en": "Each D45 segment is only 40 arc-minutes and is highly birth-time sensitive. Use a reliably recorded birth time.",
+        },
+    ),
+    "D60": VargaInfo(
+        code="D60",
+        division=60,
+        sanskrit_name="Shashtiamsha",
+        labels={"zh-TW": "D60 六十分盤（Shashtiamsha）", "en": "D60 Shashtiamsha"},
+        descriptions={
+            "zh-TW": "D60 Shashtiamsha 是最細緻的標準分盤，常用於深層業力背景與整體命盤的細部交叉檢視。本版目前顯示 D60 星座與宮位，尚未加入六十位神祇名稱。",
+            "en": "D60 Shashtiamsha is the finest standard varga and is commonly used for deep karmic context and fine cross-checking of the whole chart. This version displays D60 signs and houses; the sixty deity names are not yet included.",
+        },
+        reference="Brihat Parashara Hora Shastra, Chapter 6 Shashtiamsha rules",
+        warnings={
+            "zh-TW": "D60 每一分段只有 0°30′，上升點可能因約數分鐘的出生時間差而改變。未經校時的出生資料，不應單獨依賴 D60 判斷。",
+            "en": "Each D60 segment is only 0°30′. A difference of a few birth-time minutes can change the D60 Ascendant. Do not rely on D60 alone when the birth time is unrectified.",
+        },
+    ),
 }
 
 SUPPORTED_VARGA_CODES: tuple[str, ...] = tuple(VARGA_REGISTRY)
